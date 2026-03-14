@@ -2,7 +2,7 @@
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { DocumentStatus } from "@/generated/prisma/client";
+import { DocumentStatus, Prisma } from "@/generated/prisma/client";
 
 export type ActionResult<T = unknown> =
   | { success: true; data: T }
@@ -250,29 +250,67 @@ export async function deleteWarehouse(id: string) {
   });
 }
 
-async function nextDocumentNumber(prefix: string, orgId: string | null): Promise<string> {
-  const receiptWhere = orgId != null ? { warehouse: { organizationId: orgId } } : undefined;
-  const deliveryWhere = orgId != null ? { warehouse: { organizationId: orgId } } : undefined;
-  const transferWhere = orgId != null ? { fromWarehouse: { organizationId: orgId } } : undefined;
-  const adjWhere = orgId != null ? { warehouse: { organizationId: orgId } } : undefined;
-  let count = 0;
-  switch (prefix) {
-    case "REC":
-      count = await prisma.receipt.count({ where: receiptWhere });
-      break;
-    case "DEL":
-      count = await prisma.deliveryOrder.count({ where: deliveryWhere });
-      break;
-    case "TRF":
-      count = await prisma.internalTransfer.count({ where: transferWhere });
-      break;
-    case "ADJ":
-      count = await prisma.stockAdjustment.count({ where: adjWhere });
-      break;
-    default:
-      count = await prisma.receipt.count({ where: receiptWhere });
+async function nextDocumentNumber(prefix: string, _orgId: string | null): Promise<string> {
+  const tableLookup: Record<string, () => Promise<{ documentNumber: string } | null>> = {
+    REC: () =>
+      prisma.receipt.findFirst({
+        orderBy: { documentNumber: "desc" },
+        where: { documentNumber: { startsWith: prefix } },
+        select: { documentNumber: true },
+      }),
+    DEL: () =>
+      prisma.deliveryOrder.findFirst({
+        orderBy: { documentNumber: "desc" },
+        where: { documentNumber: { startsWith: prefix } },
+        select: { documentNumber: true },
+      }),
+    TRF: () =>
+      prisma.internalTransfer.findFirst({
+        orderBy: { documentNumber: "desc" },
+        where: { documentNumber: { startsWith: prefix } },
+        select: { documentNumber: true },
+      }),
+    ADJ: () =>
+      prisma.stockAdjustment.findFirst({
+        orderBy: { documentNumber: "desc" },
+        where: { documentNumber: { startsWith: prefix } },
+        select: { documentNumber: true },
+      }),
+  };
+
+  const finder = tableLookup[prefix] ?? tableLookup["REC"];
+  const latest = await finder();
+
+  let next = 1;
+  if (latest) {
+    const numPart = parseInt(latest.documentNumber.replace(`${prefix}-`, ""), 10);
+    if (!isNaN(numPart)) next = numPart + 1;
   }
-  return `${prefix}-${String(count + 1).padStart(4, "0")}`;
+
+  return `${prefix}-${String(next).padStart(4, "0")}`;
+}
+
+function isUniqueConstraintError(e: unknown): boolean {
+  return e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002";
+}
+
+async function createWithRetry<T>(
+  prefix: string,
+  orgId: string | null,
+  creator: (docNum: string) => Promise<T>,
+  maxRetries = 5
+): Promise<T> {
+  let docNum = await nextDocumentNumber(prefix, orgId);
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await creator(docNum);
+    } catch (e) {
+      if (!isUniqueConstraintError(e) || attempt === maxRetries - 1) throw e;
+      const num = parseInt(docNum.replace(`${prefix}-`, ""), 10);
+      docNum = `${prefix}-${String(num + 1).padStart(4, "0")}`;
+    }
+  }
+  throw new Error(`Failed to create ${prefix} document after ${maxRetries} retries`);
 }
 
 // ----- Receipts -----
@@ -298,11 +336,12 @@ export async function getReceipts(filters?: {
 export async function createReceipt(warehouseId: string, supplier?: string) {
   return safe(async () => {
     const orgId = await getOrgId();
-    const documentNumber = await nextDocumentNumber("REC", orgId);
-    return prisma.receipt.create({
-      data: { documentNumber, warehouseId, supplier: supplier ?? null, status: DocumentStatus.Draft },
-      include: { warehouse: true, lines: true },
-    });
+    return createWithRetry("REC", orgId, (documentNumber) =>
+      prisma.receipt.create({
+        data: { documentNumber, warehouseId, supplier: supplier ?? null, status: DocumentStatus.Draft },
+        include: { warehouse: true, lines: true },
+      })
+    );
   });
 }
 
@@ -395,16 +434,17 @@ export async function getDeliveryOrders(filters?: {
 export async function createDeliveryOrder(warehouseId: string, customerRef?: string) {
   return safe(async () => {
     const orgId = await getOrgId();
-    const documentNumber = await nextDocumentNumber("DEL", orgId);
-    return prisma.deliveryOrder.create({
-      data: {
-        documentNumber,
-        warehouseId,
-        customerRef: customerRef ?? null,
-        status: DocumentStatus.Draft,
-      },
-      include: { warehouse: true, lines: true },
-    });
+    return createWithRetry("DEL", orgId, (documentNumber) =>
+      prisma.deliveryOrder.create({
+        data: {
+          documentNumber,
+          warehouseId,
+          customerRef: customerRef ?? null,
+          status: DocumentStatus.Draft,
+        },
+        include: { warehouse: true, lines: true },
+      })
+    );
   });
 }
 
@@ -505,16 +545,17 @@ export async function getTransfers(filters?: {
 export async function createTransfer(fromWarehouseId: string, toWarehouseId: string) {
   return safe(async () => {
     const orgId = await getOrgId();
-    const documentNumber = await nextDocumentNumber("TRF", orgId);
-    return prisma.internalTransfer.create({
-      data: {
-        documentNumber,
-        fromWarehouseId,
-        toWarehouseId,
-        status: DocumentStatus.Draft,
-      },
-      include: { fromWarehouse: true, toWarehouse: true, lines: true },
-    });
+    return createWithRetry("TRF", orgId, (documentNumber) =>
+      prisma.internalTransfer.create({
+        data: {
+          documentNumber,
+          fromWarehouseId,
+          toWarehouseId,
+          status: DocumentStatus.Draft,
+        },
+        include: { fromWarehouse: true, toWarehouse: true, lines: true },
+      })
+    );
   });
 }
 
@@ -635,20 +676,21 @@ export async function createAdjustment(data: {
 }) {
   return safe(async () => {
     const orgId = await getOrgId();
-    const documentNumber = await nextDocumentNumber("ADJ", orgId);
     const delta = data.quantityCounted - data.quantityRecorded;
-    const adj = await prisma.stockAdjustment.create({
-      data: {
-        documentNumber,
-        warehouseId: data.warehouseId,
-        productId: data.productId,
-        quantityRecorded: data.quantityRecorded,
-        quantityCounted: data.quantityCounted,
-        reason: data.reason ?? null,
-        status: DocumentStatus.Draft,
-      },
-      include: { product: true, warehouse: true },
-    });
+    const adj = await createWithRetry("ADJ", orgId, (documentNumber) =>
+      prisma.stockAdjustment.create({
+        data: {
+          documentNumber,
+          warehouseId: data.warehouseId,
+          productId: data.productId,
+          quantityRecorded: data.quantityRecorded,
+          quantityCounted: data.quantityCounted,
+          reason: data.reason ?? null,
+          status: DocumentStatus.Draft,
+        },
+        include: { product: true, warehouse: true },
+      })
+    );
     if (delta !== 0) {
       await prisma.stockLevel.upsert({
         where: {
