@@ -4,6 +4,20 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { DocumentStatus } from "@/generated/prisma/client";
 
+export type ActionResult<T = unknown> =
+  | { success: true; data: T }
+  | { success: false; error: string };
+
+async function safe<T>(fn: () => Promise<T>): Promise<ActionResult<T>> {
+  try {
+    return { success: true, data: await fn() };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Unknown error";
+    console.error("[server-action]", msg);
+    return { success: false, error: msg };
+  }
+}
+
 const PENDING_STATUSES: DocumentStatus[] = [
   DocumentStatus.Draft,
   DocumentStatus.Waiting,
@@ -109,17 +123,19 @@ export async function createProduct(data: {
   unitOfMeasure: string;
   reorderThreshold?: number | null;
 }) {
-  const orgId = await getOrgId();
-  if (orgId == null) throw new Error("Not authorized");
-  return prisma.product.create({
-    data: {
-      name: data.name,
-      sku: data.sku,
-      categoryId: data.categoryId,
-      organizationId: orgId,
-      unitOfMeasure: data.unitOfMeasure,
-      reorderThreshold: data.reorderThreshold ?? null,
-    },
+  return safe(async () => {
+    const orgId = await getOrgId();
+    if (orgId == null) throw new Error("Not authorized");
+    return prisma.product.create({
+      data: {
+        name: data.name,
+        sku: data.sku,
+        categoryId: data.categoryId,
+        organizationId: orgId,
+        unitOfMeasure: data.unitOfMeasure,
+        reorderThreshold: data.reorderThreshold ?? null,
+      },
+    });
   });
 }
 
@@ -133,16 +149,20 @@ export async function updateProduct(
     reorderThreshold?: number | null;
   }
 ) {
-  const orgId = await getOrgId();
-  return prisma.product.update({
-    where: { id, ...(orgId != null ? { organizationId: orgId } : {}) },
-    data,
+  return safe(async () => {
+    const orgId = await getOrgId();
+    return prisma.product.update({
+      where: { id, ...(orgId != null ? { organizationId: orgId } : {}) },
+      data,
+    });
   });
 }
 
 export async function deleteProduct(id: string) {
-  const orgId = await getOrgId();
-  return prisma.product.delete({ where: { id, ...(orgId != null ? { organizationId: orgId } : {}) } });
+  return safe(async () => {
+    const orgId = await getOrgId();
+    return prisma.product.delete({ where: { id, ...(orgId != null ? { organizationId: orgId } : {}) } });
+  });
 }
 
 // ----- Categories -----
@@ -156,19 +176,25 @@ export async function getCategories() {
 }
 
 export async function createCategory(data: { name: string; slug: string }) {
-  const orgId = await getOrgId();
-  if (orgId == null) throw new Error("Not authorized");
-  return prisma.category.create({ data: { ...data, organizationId: orgId } });
+  return safe(async () => {
+    const orgId = await getOrgId();
+    if (orgId == null) throw new Error("Not authorized");
+    return prisma.category.create({ data: { ...data, organizationId: orgId } });
+  });
 }
 
 export async function updateCategory(id: string, data: { name?: string; slug?: string }) {
-  const orgId = await getOrgId();
-  return prisma.category.update({ where: { id, ...(orgId != null ? { organizationId: orgId } : {}) }, data });
+  return safe(async () => {
+    const orgId = await getOrgId();
+    return prisma.category.update({ where: { id, ...(orgId != null ? { organizationId: orgId } : {}) }, data });
+  });
 }
 
 export async function deleteCategory(id: string) {
-  const orgId = await getOrgId();
-  return prisma.category.delete({ where: { id, ...(orgId != null ? { organizationId: orgId } : {}) } });
+  return safe(async () => {
+    const orgId = await getOrgId();
+    return prisma.category.delete({ where: { id, ...(orgId != null ? { organizationId: orgId } : {}) } });
+  });
 }
 
 // ----- Warehouses -----
@@ -182,22 +208,28 @@ export async function getWarehouses() {
 }
 
 export async function createWarehouse(data: { name: string; code?: string; address?: string }) {
-  const orgId = await getOrgId();
-  if (orgId == null) throw new Error("Not authorized");
-  return prisma.warehouse.create({ data: { ...data, organizationId: orgId } });
+  return safe(async () => {
+    const orgId = await getOrgId();
+    if (orgId == null) throw new Error("Not authorized");
+    return prisma.warehouse.create({ data: { ...data, organizationId: orgId } });
+  });
 }
 
 export async function updateWarehouse(
   id: string,
   data: { name?: string; code?: string; address?: string }
 ) {
-  const orgId = await getOrgId();
-  return prisma.warehouse.update({ where: { id, ...(orgId != null ? { organizationId: orgId } : {}) }, data });
+  return safe(async () => {
+    const orgId = await getOrgId();
+    return prisma.warehouse.update({ where: { id, ...(orgId != null ? { organizationId: orgId } : {}) }, data });
+  });
 }
 
 export async function deleteWarehouse(id: string) {
-  const orgId = await getOrgId();
-  return prisma.warehouse.delete({ where: { id, ...(orgId != null ? { organizationId: orgId } : {}) } });
+  return safe(async () => {
+    const orgId = await getOrgId();
+    return prisma.warehouse.delete({ where: { id, ...(orgId != null ? { organizationId: orgId } : {}) } });
+  });
 }
 
 async function nextDocumentNumber(prefix: string, orgId: string | null): Promise<string> {
@@ -246,11 +278,13 @@ export async function getReceipts(filters?: {
 }
 
 export async function createReceipt(warehouseId: string, supplier?: string) {
-  const orgId = await getOrgId();
-  const documentNumber = await nextDocumentNumber("REC", orgId);
-  return prisma.receipt.create({
-    data: { documentNumber, warehouseId, supplier: supplier ?? null, status: DocumentStatus.Draft },
-    include: { warehouse: true, lines: true },
+  return safe(async () => {
+    const orgId = await getOrgId();
+    const documentNumber = await nextDocumentNumber("REC", orgId);
+    return prisma.receipt.create({
+      data: { documentNumber, warehouseId, supplier: supplier ?? null, status: DocumentStatus.Draft },
+      include: { warehouse: true, lines: true },
+    });
   });
 }
 
@@ -260,57 +294,63 @@ export async function addReceiptLine(
   quantityOrdered: number,
   quantityReceived: number
 ) {
-  return prisma.receiptLine.create({
-    data: { receiptId, productId, quantityOrdered, quantityReceived },
-    include: { product: true },
+  return safe(async () => {
+    return prisma.receiptLine.create({
+      data: { receiptId, productId, quantityOrdered, quantityReceived },
+      include: { product: true },
+    });
   });
 }
 
 export async function validateReceipt(receiptId: string) {
-  const orgId = await getOrgId();
-  const receipt = await prisma.receipt.findFirst({
-    where: { id: receiptId, ...(orgId != null ? { warehouse: { organizationId: orgId } } : {}) },
-    include: { lines: true },
-  });
-  if (!receipt || receipt.status !== DocumentStatus.Ready) return null;
-  for (const line of receipt.lines) {
-    await prisma.stockLevel.upsert({
-      where: {
-        productId_warehouseId: {
+  return safe(async () => {
+    const orgId = await getOrgId();
+    const receipt = await prisma.receipt.findFirst({
+      where: { id: receiptId, ...(orgId != null ? { warehouse: { organizationId: orgId } } : {}) },
+      include: { lines: true },
+    });
+    if (!receipt || receipt.status !== DocumentStatus.Ready) return null;
+    for (const line of receipt.lines) {
+      await prisma.stockLevel.upsert({
+        where: {
+          productId_warehouseId: {
+            productId: line.productId,
+            warehouseId: receipt.warehouseId,
+          },
+        },
+        create: {
           productId: line.productId,
           warehouseId: receipt.warehouseId,
+          quantity: line.quantityReceived,
         },
-      },
-      create: {
-        productId: line.productId,
-        warehouseId: receipt.warehouseId,
-        quantity: line.quantityReceived,
-      },
-      update: { quantity: { increment: line.quantityReceived } },
+        update: { quantity: { increment: line.quantityReceived } },
+      });
+      await prisma.stockLedgerEntry.create({
+        data: {
+          productId: line.productId,
+          warehouseId: receipt.warehouseId,
+          quantityChange: line.quantityReceived,
+          referenceType: "Receipt",
+          referenceId: receiptId,
+        },
+      });
+    }
+    return prisma.receipt.update({
+      where: { id: receiptId },
+      data: { status: DocumentStatus.Done },
+      include: { lines: true, warehouse: true },
     });
-    await prisma.stockLedgerEntry.create({
-      data: {
-        productId: line.productId,
-        warehouseId: receipt.warehouseId,
-        quantityChange: line.quantityReceived,
-        referenceType: "Receipt",
-        referenceId: receiptId,
-      },
-    });
-  }
-  return prisma.receipt.update({
-    where: { id: receiptId },
-    data: { status: DocumentStatus.Done },
-    include: { lines: true, warehouse: true },
   });
 }
 
 export async function setReceiptStatus(receiptId: string, status: DocumentStatus) {
-  const orgId = await getOrgId();
-  return prisma.receipt.update({
-    where: { id: receiptId, ...(orgId != null ? { warehouse: { organizationId: orgId } } : {}) },
-    data: { status },
-    include: { warehouse: true, lines: true },
+  return safe(async () => {
+    const orgId = await getOrgId();
+    return prisma.receipt.update({
+      where: { id: receiptId, ...(orgId != null ? { warehouse: { organizationId: orgId } } : {}) },
+      data: { status },
+      include: { warehouse: true, lines: true },
+    });
   });
 }
 
@@ -335,66 +375,72 @@ export async function getDeliveryOrders(filters?: {
 }
 
 export async function createDeliveryOrder(warehouseId: string, customerRef?: string) {
-  const orgId = await getOrgId();
-  const documentNumber = await nextDocumentNumber("DEL", orgId);
-  return prisma.deliveryOrder.create({
-    data: {
-      documentNumber,
-      warehouseId,
-      customerRef: customerRef ?? null,
-      status: DocumentStatus.Draft,
-    },
-    include: { warehouse: true, lines: true },
+  return safe(async () => {
+    const orgId = await getOrgId();
+    const documentNumber = await nextDocumentNumber("DEL", orgId);
+    return prisma.deliveryOrder.create({
+      data: {
+        documentNumber,
+        warehouseId,
+        customerRef: customerRef ?? null,
+        status: DocumentStatus.Draft,
+      },
+      include: { warehouse: true, lines: true },
+    });
   });
 }
 
 export async function addDeliveryLine(deliveryOrderId: string, productId: string, quantity: number) {
-  return prisma.deliveryLine.create({
-    data: { deliveryOrderId, productId, quantity },
-    include: { product: true },
+  return safe(async () => {
+    return prisma.deliveryLine.create({
+      data: { deliveryOrderId, productId, quantity },
+      include: { product: true },
+    });
   });
 }
 
 export async function validateDeliveryOrder(deliveryOrderId: string) {
-  const orgId = await getOrgId();
-  const order = await prisma.deliveryOrder.findFirst({
-    where: { id: deliveryOrderId, ...(orgId != null ? { warehouse: { organizationId: orgId } } : {}) },
-    include: { lines: true },
-  });
-  if (!order || order.status !== DocumentStatus.Ready) return null;
-  for (const line of order.lines) {
-    const level = await prisma.stockLevel.findUnique({
-      where: {
-        productId_warehouseId: {
+  return safe(async () => {
+    const orgId = await getOrgId();
+    const order = await prisma.deliveryOrder.findFirst({
+      where: { id: deliveryOrderId, ...(orgId != null ? { warehouse: { organizationId: orgId } } : {}) },
+      include: { lines: true },
+    });
+    if (!order || order.status !== DocumentStatus.Ready) return null;
+    for (const line of order.lines) {
+      const level = await prisma.stockLevel.findUnique({
+        where: {
+          productId_warehouseId: {
+            productId: line.productId,
+            warehouseId: order.warehouseId,
+          },
+        },
+      });
+      if (!level || level.quantity < line.quantity) throw new Error("Insufficient stock");
+      await prisma.stockLevel.update({
+        where: {
+          productId_warehouseId: {
+            productId: line.productId,
+            warehouseId: order.warehouseId,
+          },
+        },
+        data: { quantity: { decrement: line.quantity } },
+      });
+      await prisma.stockLedgerEntry.create({
+        data: {
           productId: line.productId,
           warehouseId: order.warehouseId,
+          quantityChange: -line.quantity,
+          referenceType: "Delivery",
+          referenceId: deliveryOrderId,
         },
-      },
+      });
+    }
+    return prisma.deliveryOrder.update({
+      where: { id: deliveryOrderId },
+      data: { status: DocumentStatus.Done },
+      include: { lines: true, warehouse: true },
     });
-    if (!level || level.quantity < line.quantity) throw new Error("Insufficient stock");
-    await prisma.stockLevel.update({
-      where: {
-        productId_warehouseId: {
-          productId: line.productId,
-          warehouseId: order.warehouseId,
-        },
-      },
-      data: { quantity: { decrement: line.quantity } },
-    });
-    await prisma.stockLedgerEntry.create({
-      data: {
-        productId: line.productId,
-        warehouseId: order.warehouseId,
-        quantityChange: -line.quantity,
-        referenceType: "Delivery",
-        referenceId: deliveryOrderId,
-      },
-    });
-  }
-  return prisma.deliveryOrder.update({
-    where: { id: deliveryOrderId },
-    data: { status: DocumentStatus.Done },
-    include: { lines: true, warehouse: true },
   });
 }
 
@@ -402,11 +448,13 @@ export async function setDeliveryOrderStatus(
   deliveryOrderId: string,
   status: DocumentStatus
 ) {
-  const orgId = await getOrgId();
-  return prisma.deliveryOrder.update({
-    where: { id: deliveryOrderId, ...(orgId != null ? { warehouse: { organizationId: orgId } } : {}) },
-    data: { status },
-    include: { warehouse: true, lines: true },
+  return safe(async () => {
+    const orgId = await getOrgId();
+    return prisma.deliveryOrder.update({
+      where: { id: deliveryOrderId, ...(orgId != null ? { warehouse: { organizationId: orgId } } : {}) },
+      data: { status },
+      include: { warehouse: true, lines: true },
+    });
   });
 }
 
@@ -437,16 +485,18 @@ export async function getTransfers(filters?: {
 }
 
 export async function createTransfer(fromWarehouseId: string, toWarehouseId: string) {
-  const orgId = await getOrgId();
-  const documentNumber = await nextDocumentNumber("TRF", orgId);
-  return prisma.internalTransfer.create({
-    data: {
-      documentNumber,
-      fromWarehouseId,
-      toWarehouseId,
-      status: DocumentStatus.Draft,
-    },
-    include: { fromWarehouse: true, toWarehouse: true, lines: true },
+  return safe(async () => {
+    const orgId = await getOrgId();
+    const documentNumber = await nextDocumentNumber("TRF", orgId);
+    return prisma.internalTransfer.create({
+      data: {
+        documentNumber,
+        fromWarehouseId,
+        toWarehouseId,
+        status: DocumentStatus.Draft,
+      },
+      include: { fromWarehouse: true, toWarehouse: true, lines: true },
+    });
   });
 }
 
@@ -455,84 +505,90 @@ export async function addTransferLine(
   productId: string,
   quantity: number
 ) {
-  return prisma.transferLine.create({
-    data: { transferId, productId, quantity },
-    include: { product: true },
+  return safe(async () => {
+    return prisma.transferLine.create({
+      data: { transferId, productId, quantity },
+      include: { product: true },
+    });
   });
 }
 
 export async function validateTransfer(transferId: string) {
-  const orgId = await getOrgId();
-  const transfer = await prisma.internalTransfer.findFirst({
-    where: { id: transferId, ...(orgId != null ? { fromWarehouse: { organizationId: orgId } } : {}) },
-    include: { lines: true },
-  });
-  if (!transfer || transfer.status !== DocumentStatus.Ready) return null;
-  for (const line of transfer.lines) {
-    const from = await prisma.stockLevel.findUnique({
-      where: {
-        productId_warehouseId: {
-          productId: line.productId,
-          warehouseId: transfer.fromWarehouseId,
-        },
-      },
+  return safe(async () => {
+    const orgId = await getOrgId();
+    const transfer = await prisma.internalTransfer.findFirst({
+      where: { id: transferId, ...(orgId != null ? { fromWarehouse: { organizationId: orgId } } : {}) },
+      include: { lines: true },
     });
-    if (!from || from.quantity < line.quantity) throw new Error("Insufficient stock at source");
-    await prisma.stockLevel.update({
-      where: {
-        productId_warehouseId: {
-          productId: line.productId,
-          warehouseId: transfer.fromWarehouseId,
+    if (!transfer || transfer.status !== DocumentStatus.Ready) return null;
+    for (const line of transfer.lines) {
+      const from = await prisma.stockLevel.findUnique({
+        where: {
+          productId_warehouseId: {
+            productId: line.productId,
+            warehouseId: transfer.fromWarehouseId,
+          },
         },
-      },
-      data: { quantity: { decrement: line.quantity } },
-    });
-    await prisma.stockLevel.upsert({
-      where: {
-        productId_warehouseId: {
+      });
+      if (!from || from.quantity < line.quantity) throw new Error("Insufficient stock at source");
+      await prisma.stockLevel.update({
+        where: {
+          productId_warehouseId: {
+            productId: line.productId,
+            warehouseId: transfer.fromWarehouseId,
+          },
+        },
+        data: { quantity: { decrement: line.quantity } },
+      });
+      await prisma.stockLevel.upsert({
+        where: {
+          productId_warehouseId: {
+            productId: line.productId,
+            warehouseId: transfer.toWarehouseId,
+          },
+        },
+        create: {
           productId: line.productId,
           warehouseId: transfer.toWarehouseId,
+          quantity: line.quantity,
         },
-      },
-      create: {
-        productId: line.productId,
-        warehouseId: transfer.toWarehouseId,
-        quantity: line.quantity,
-      },
-      update: { quantity: { increment: line.quantity } },
+        update: { quantity: { increment: line.quantity } },
+      });
+      await prisma.stockLedgerEntry.create({
+        data: {
+          productId: line.productId,
+          warehouseId: transfer.fromWarehouseId,
+          quantityChange: -line.quantity,
+          referenceType: "Transfer",
+          referenceId: transferId,
+        },
+      });
+      await prisma.stockLedgerEntry.create({
+        data: {
+          productId: line.productId,
+          warehouseId: transfer.toWarehouseId,
+          quantityChange: line.quantity,
+          referenceType: "Transfer",
+          referenceId: transferId,
+        },
+      });
+    }
+    return prisma.internalTransfer.update({
+      where: { id: transferId },
+      data: { status: DocumentStatus.Done },
+      include: { lines: true, fromWarehouse: true, toWarehouse: true },
     });
-    await prisma.stockLedgerEntry.create({
-      data: {
-        productId: line.productId,
-        warehouseId: transfer.fromWarehouseId,
-        quantityChange: -line.quantity,
-        referenceType: "Transfer",
-        referenceId: transferId,
-      },
-    });
-    await prisma.stockLedgerEntry.create({
-      data: {
-        productId: line.productId,
-        warehouseId: transfer.toWarehouseId,
-        quantityChange: line.quantity,
-        referenceType: "Transfer",
-        referenceId: transferId,
-      },
-    });
-  }
-  return prisma.internalTransfer.update({
-    where: { id: transferId },
-    data: { status: DocumentStatus.Done },
-    include: { lines: true, fromWarehouse: true, toWarehouse: true },
   });
 }
 
 export async function setTransferStatus(transferId: string, status: DocumentStatus) {
-  const orgId = await getOrgId();
-  return prisma.internalTransfer.update({
-    where: { id: transferId, ...(orgId != null ? { fromWarehouse: { organizationId: orgId } } : {}) },
-    data: { status },
-    include: { fromWarehouse: true, toWarehouse: true, lines: true },
+  return safe(async () => {
+    const orgId = await getOrgId();
+    return prisma.internalTransfer.update({
+      where: { id: transferId, ...(orgId != null ? { fromWarehouse: { organizationId: orgId } } : {}) },
+      data: { status },
+      include: { fromWarehouse: true, toWarehouse: true, lines: true },
+    });
   });
 }
 
@@ -559,50 +615,52 @@ export async function createAdjustment(data: {
   quantityCounted: number;
   reason?: string;
 }) {
-  const orgId = await getOrgId();
-  const documentNumber = await nextDocumentNumber("ADJ", orgId);
-  const delta = data.quantityCounted - data.quantityRecorded;
-  const adj = await prisma.stockAdjustment.create({
-    data: {
-      documentNumber,
-      warehouseId: data.warehouseId,
-      productId: data.productId,
-      quantityRecorded: data.quantityRecorded,
-      quantityCounted: data.quantityCounted,
-      reason: data.reason ?? null,
-      status: DocumentStatus.Draft,
-    },
-    include: { product: true, warehouse: true },
-  });
-  if (delta !== 0) {
-    await prisma.stockLevel.upsert({
-      where: {
-        productId_warehouseId: {
+  return safe(async () => {
+    const orgId = await getOrgId();
+    const documentNumber = await nextDocumentNumber("ADJ", orgId);
+    const delta = data.quantityCounted - data.quantityRecorded;
+    const adj = await prisma.stockAdjustment.create({
+      data: {
+        documentNumber,
+        warehouseId: data.warehouseId,
+        productId: data.productId,
+        quantityRecorded: data.quantityRecorded,
+        quantityCounted: data.quantityCounted,
+        reason: data.reason ?? null,
+        status: DocumentStatus.Draft,
+      },
+      include: { product: true, warehouse: true },
+    });
+    if (delta !== 0) {
+      await prisma.stockLevel.upsert({
+        where: {
+          productId_warehouseId: {
+            productId: data.productId,
+            warehouseId: data.warehouseId,
+          },
+        },
+        create: {
           productId: data.productId,
           warehouseId: data.warehouseId,
+          quantity: data.quantityCounted,
         },
-      },
-      create: {
-        productId: data.productId,
-        warehouseId: data.warehouseId,
-        quantity: data.quantityCounted,
-      },
-      update: { quantity: data.quantityCounted },
+        update: { quantity: data.quantityCounted },
+      });
+      await prisma.stockLedgerEntry.create({
+        data: {
+          productId: data.productId,
+          warehouseId: data.warehouseId,
+          quantityChange: delta,
+          referenceType: "Adjustment",
+          referenceId: adj.id,
+        },
+      });
+    }
+    return prisma.stockAdjustment.update({
+      where: { id: adj.id },
+      data: { status: DocumentStatus.Done },
+      include: { product: true, warehouse: true },
     });
-    await prisma.stockLedgerEntry.create({
-      data: {
-        productId: data.productId,
-        warehouseId: data.warehouseId,
-        quantityChange: delta,
-        referenceType: "Adjustment",
-        referenceId: adj.id,
-      },
-    });
-  }
-  return prisma.stockAdjustment.update({
-    where: { id: adj.id },
-    data: { status: DocumentStatus.Done },
-    include: { product: true, warehouse: true },
   });
 }
 

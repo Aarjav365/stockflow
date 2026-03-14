@@ -105,33 +105,31 @@ export function ProductsTable({
   }
 
   async function onSubmit(data: ProductFormValues) {
-    try {
-      if (editing) {
-        await updateProduct(editing.id, {
-          name: data.name,
-          sku: data.sku,
-          categoryId: data.categoryId,
-          unitOfMeasure: data.unitOfMeasure,
-          reorderThreshold: data.reorderThreshold,
-        });
-        toast.success("Product updated");
-      } else {
-        await createProduct({
-          name: data.name,
-          sku: data.sku,
-          categoryId: data.categoryId,
-          unitOfMeasure: data.unitOfMeasure,
-          reorderThreshold: data.reorderThreshold,
-        });
-        toast.success("Product created");
-      }
-      setOpen(false);
-      setEditing(null);
-      form.reset({ name: "", sku: "", categoryId: "", unitOfMeasure: "pcs", reorderThreshold: null });
-      router.refresh();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to save product");
+    if (editing) {
+      const result = await updateProduct(editing.id, {
+        name: data.name,
+        sku: data.sku,
+        categoryId: data.categoryId,
+        unitOfMeasure: data.unitOfMeasure,
+        reorderThreshold: data.reorderThreshold,
+      });
+      if (!result.success) { toast.error(result.error); return; }
+      toast.success("Product updated");
+    } else {
+      const result = await createProduct({
+        name: data.name,
+        sku: data.sku,
+        categoryId: data.categoryId,
+        unitOfMeasure: data.unitOfMeasure,
+        reorderThreshold: data.reorderThreshold,
+      });
+      if (!result.success) { toast.error(result.error); return; }
+      toast.success("Product created");
     }
+    setOpen(false);
+    setEditing(null);
+    form.reset({ name: "", sku: "", categoryId: "", unitOfMeasure: "pcs", reorderThreshold: null });
+    router.refresh();
   }
 
   function openEdit(p: Product) {
@@ -161,27 +159,21 @@ export function ProductsTable({
   async function handleCreateCategory() {
     if (!newCategoryName.trim()) return;
     const slug = newCategorySlug.trim() || newCategoryName.trim().toLowerCase().replace(/\s+/g, "-");
-    try {
-      await createCategory({ name: newCategoryName.trim(), slug });
-      setOpenCategory(false);
-      setNewCategoryName("");
-      setNewCategorySlug("");
-      router.refresh();
-      toast.success("Category created");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to create category");
-    }
+    const result = await createCategory({ name: newCategoryName.trim(), slug });
+    if (!result.success) { toast.error(result.error); return; }
+    setOpenCategory(false);
+    setNewCategoryName("");
+    setNewCategorySlug("");
+    router.refresh();
+    toast.success("Category created");
   }
 
   async function handleDelete(p: Product) {
     if (!confirm(`Delete "${p.name}"?`)) return;
-    try {
-      await deleteProduct(p.id);
-      toast.success("Product deleted");
-      router.refresh();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to delete");
-    }
+    const result = await deleteProduct(p.id);
+    if (!result.success) { toast.error(result.error); return; }
+    toast.success("Product deleted");
+    router.refresh();
   }
 
   return (

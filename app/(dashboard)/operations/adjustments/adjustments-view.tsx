@@ -79,25 +79,22 @@ export function AdjustmentsView({
       toast.error("Invalid quantities");
       return;
     }
-    try {
-      await createAdjustment({
-        warehouseId,
-        productId,
-        quantityRecorded: recorded,
-        quantityCounted: counted,
-        reason: reason || undefined,
-      });
-      setOpen(false);
-      setWarehouseId("");
-      setProductId("");
-      setQuantityRecorded("");
-      setQuantityCounted("");
-      setReason("");
-      router.refresh();
-      toast.success("Adjustment applied — stock updated");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to create adjustment");
-    }
+    const result = await createAdjustment({
+      warehouseId,
+      productId,
+      quantityRecorded: recorded,
+      quantityCounted: counted,
+      reason: reason || undefined,
+    });
+    if (!result.success) { toast.error(result.error); return; }
+    setOpen(false);
+    setWarehouseId("");
+    setProductId("");
+    setQuantityRecorded("");
+    setQuantityCounted("");
+    setReason("");
+    router.refresh();
+    toast.success("Adjustment applied — stock updated");
   }
 
   return (

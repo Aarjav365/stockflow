@@ -73,54 +73,42 @@ export function DeliveriesView({
       toast.error("Select a warehouse");
       return;
     }
-    try {
-      const o = await createDeliveryOrder(
-        newWarehouseId,
-        newCustomerRef || undefined
-      );
-      setOpenNew(false);
-      setNewWarehouseId("");
-      setNewCustomerRef("");
-      router.push(`/operations/deliveries?id=${o.id}`);
-      router.refresh();
-      toast.success("Delivery order created");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to create");
-    }
+    const result = await createDeliveryOrder(
+      newWarehouseId,
+      newCustomerRef || undefined
+    );
+    if (!result.success) { toast.error(result.error); return; }
+    setOpenNew(false);
+    setNewWarehouseId("");
+    setNewCustomerRef("");
+    router.push(`/operations/deliveries?id=${result.data.id}`);
+    router.refresh();
+    toast.success("Delivery order created");
   }
 
   async function handleAddLine() {
     if (!addLineOrderId || !addProductId || addQty <= 0) return;
-    try {
-      await addDeliveryLine(addLineOrderId, addProductId, addQty);
-      setAddLineOrderId(null);
-      setAddProductId("");
-      setAddQty(0);
-      router.refresh();
-      toast.success("Line added");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to add line");
-    }
+    const result = await addDeliveryLine(addLineOrderId, addProductId, addQty);
+    if (!result.success) { toast.error(result.error); return; }
+    setAddLineOrderId(null);
+    setAddProductId("");
+    setAddQty(0);
+    router.refresh();
+    toast.success("Line added");
   }
 
   async function handleSetReady(orderId: string) {
-    try {
-      await setDeliveryOrderStatus(orderId, DocumentStatus.Ready);
-      router.refresh();
-      toast.success("Marked as Ready");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed");
-    }
+    const result = await setDeliveryOrderStatus(orderId, DocumentStatus.Ready);
+    if (!result.success) { toast.error(result.error); return; }
+    router.refresh();
+    toast.success("Marked as Ready");
   }
 
   async function handleValidate(orderId: string) {
-    try {
-      await validateDeliveryOrder(orderId);
-      router.refresh();
-      toast.success("Delivery validated — stock updated");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Validation failed");
-    }
+    const result = await validateDeliveryOrder(orderId);
+    if (!result.success) { toast.error(result.error); return; }
+    router.refresh();
+    toast.success("Delivery validated — stock updated");
   }
 
   return (

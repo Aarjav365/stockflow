@@ -60,29 +60,27 @@ export function WarehousesTable({ warehouses: initial }: WarehousesTableProps) {
   });
 
   async function onSubmit(data: WarehouseFormValues) {
-    try {
-      if (editing) {
-        await updateWarehouse(editing.id, {
-          name: data.name,
-          code: data.code || undefined,
-          address: data.address || undefined,
-        });
-        toast.success("Warehouse updated");
-      } else {
-        await createWarehouse({
-          name: data.name,
-          code: data.code || undefined,
-          address: data.address || undefined,
-        });
-        toast.success("Warehouse created");
-      }
-      setOpen(false);
-      setEditing(null);
-      form.reset({ name: "", code: "", address: "" });
-      router.refresh();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to save");
+    if (editing) {
+      const result = await updateWarehouse(editing.id, {
+        name: data.name,
+        code: data.code || undefined,
+        address: data.address || undefined,
+      });
+      if (!result.success) { toast.error(result.error); return; }
+      toast.success("Warehouse updated");
+    } else {
+      const result = await createWarehouse({
+        name: data.name,
+        code: data.code || undefined,
+        address: data.address || undefined,
+      });
+      if (!result.success) { toast.error(result.error); return; }
+      toast.success("Warehouse created");
     }
+    setOpen(false);
+    setEditing(null);
+    form.reset({ name: "", code: "", address: "" });
+    router.refresh();
   }
 
   function openEdit(w: Warehouse) {
@@ -103,13 +101,10 @@ export function WarehousesTable({ warehouses: initial }: WarehousesTableProps) {
 
   async function handleDelete(w: Warehouse) {
     if (!confirm(`Delete "${w.name}"?`)) return;
-    try {
-      await deleteWarehouse(w.id);
-      toast.success("Warehouse deleted");
-      router.refresh();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to delete");
-    }
+    const result = await deleteWarehouse(w.id);
+    if (!result.success) { toast.error(result.error); return; }
+    toast.success("Warehouse deleted");
+    router.refresh();
   }
 
   return (

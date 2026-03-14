@@ -75,57 +75,45 @@ export function ReceiptsView({
       toast.error("Select a warehouse");
       return;
     }
-    try {
-      const r = await createReceipt(newWarehouseId, newSupplier || undefined);
-      setOpenNew(false);
-      setNewWarehouseId("");
-      setNewSupplier("");
-      router.push(`/operations/receipts?id=${r.id}`);
-      router.refresh();
-      toast.success("Receipt created");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to create");
-    }
+    const result = await createReceipt(newWarehouseId, newSupplier || undefined);
+    if (!result.success) { toast.error(result.error); return; }
+    setOpenNew(false);
+    setNewWarehouseId("");
+    setNewSupplier("");
+    router.push(`/operations/receipts?id=${result.data.id}`);
+    router.refresh();
+    toast.success("Receipt created");
   }
 
   async function handleAddLine() {
     if (!addLineReceiptId || !addProductId || addQtyReceived < 0) return;
-    try {
-      await addReceiptLine(
-        addLineReceiptId,
-        addProductId,
-        addQtyOrdered,
-        addQtyReceived
-      );
-      setAddLineReceiptId(null);
-      setAddProductId("");
-      setAddQtyOrdered(0);
-      setAddQtyReceived(0);
-      router.refresh();
-      toast.success("Line added");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to add line");
-    }
+    const result = await addReceiptLine(
+      addLineReceiptId,
+      addProductId,
+      addQtyOrdered,
+      addQtyReceived
+    );
+    if (!result.success) { toast.error(result.error); return; }
+    setAddLineReceiptId(null);
+    setAddProductId("");
+    setAddQtyOrdered(0);
+    setAddQtyReceived(0);
+    router.refresh();
+    toast.success("Line added");
   }
 
   async function handleSetReady(receiptId: string) {
-    try {
-      await setReceiptStatus(receiptId, DocumentStatus.Ready);
-      router.refresh();
-      toast.success("Marked as Ready");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed");
-    }
+    const result = await setReceiptStatus(receiptId, DocumentStatus.Ready);
+    if (!result.success) { toast.error(result.error); return; }
+    router.refresh();
+    toast.success("Marked as Ready");
   }
 
   async function handleValidate(receiptId: string) {
-    try {
-      await validateReceipt(receiptId);
-      router.refresh();
-      toast.success("Receipt validated — stock updated");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Validation failed");
-    }
+    const result = await validateReceipt(receiptId);
+    if (!result.success) { toast.error(result.error); return; }
+    router.refresh();
+    toast.success("Receipt validated — stock updated");
   }
 
   return (

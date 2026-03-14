@@ -77,51 +77,39 @@ export function TransfersView({
       toast.error("From and to must be different");
       return;
     }
-    try {
-      const t = await createTransfer(fromId, toId);
-      setOpenNew(false);
-      setFromId("");
-      setToId("");
-      router.push(`/operations/transfers?id=${t.id}`);
-      router.refresh();
-      toast.success("Transfer created");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to create");
-    }
+    const result = await createTransfer(fromId, toId);
+    if (!result.success) { toast.error(result.error); return; }
+    setOpenNew(false);
+    setFromId("");
+    setToId("");
+    router.push(`/operations/transfers?id=${result.data.id}`);
+    router.refresh();
+    toast.success("Transfer created");
   }
 
   async function handleAddLine() {
     if (!addLineTransferId || !addProductId || addQty <= 0) return;
-    try {
-      await addTransferLine(addLineTransferId, addProductId, addQty);
-      setAddLineTransferId(null);
-      setAddProductId("");
-      setAddQty(0);
-      router.refresh();
-      toast.success("Line added");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to add line");
-    }
+    const result = await addTransferLine(addLineTransferId, addProductId, addQty);
+    if (!result.success) { toast.error(result.error); return; }
+    setAddLineTransferId(null);
+    setAddProductId("");
+    setAddQty(0);
+    router.refresh();
+    toast.success("Line added");
   }
 
   async function handleSetReady(transferId: string) {
-    try {
-      await setTransferStatus(transferId, DocumentStatus.Ready);
-      router.refresh();
-      toast.success("Marked as Ready");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed");
-    }
+    const result = await setTransferStatus(transferId, DocumentStatus.Ready);
+    if (!result.success) { toast.error(result.error); return; }
+    router.refresh();
+    toast.success("Marked as Ready");
   }
 
   async function handleValidate(transferId: string) {
-    try {
-      await validateTransfer(transferId);
-      router.refresh();
-      toast.success("Transfer validated — stock updated");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Validation failed");
-    }
+    const result = await validateTransfer(transferId);
+    if (!result.success) { toast.error(result.error); return; }
+    router.refresh();
+    toast.success("Transfer validated — stock updated");
   }
 
   return (
