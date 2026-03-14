@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { z } from "zod/v3";
@@ -36,7 +36,7 @@ const formSchema = z.object({
   otp: z.string().min(6, "Please enter the 6-digit code"),
 });
 
-export default function OTPPage() {
+function OTPForm() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -123,5 +123,13 @@ export default function OTPPage() {
         </p>
       </CardFooter>
     </Card>
+  );
+}
+
+export default function OTPPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-svh items-center justify-center p-6">Loading...</div>}>
+      <OTPForm />
+    </Suspense>
   );
 }

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { toast } from "sonner";
 import {
   Card,
@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/card";
 import { SignInForm } from "./sign-in-form";
 
-export default function SignInPage() {
+function SignInContent() {
   const searchParams = useSearchParams();
   const verified = searchParams.get("verified") === "1";
 
@@ -46,5 +46,13 @@ export default function SignInPage() {
         </p>
       </CardFooter>
     </Card>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-svh items-center justify-center p-6">Loading...</div>}>
+      <SignInContent />
+    </Suspense>
   );
 }

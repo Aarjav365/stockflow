@@ -4,11 +4,11 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { DocumentStatus } from "@/generated/prisma/client";
 
-const PENDING_STATUSES = [
+const PENDING_STATUSES: DocumentStatus[] = [
   DocumentStatus.Draft,
   DocumentStatus.Waiting,
   DocumentStatus.Ready,
-] as const;
+];
 
 async function getOrgId(): Promise<string | null> {
   const session = await auth();
@@ -235,7 +235,7 @@ export async function getReceipts(filters?: {
     },
     include: {
       warehouse: true,
-      lines: { include: { product: true } },
+      lines: { include: { product: { include: { category: true, stockLevels: { include: { warehouse: true } } } } } },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -324,7 +324,7 @@ export async function getDeliveryOrders(filters?: {
     },
     include: {
       warehouse: true,
-      lines: { include: { product: true } },
+      lines: { include: { product: { include: { category: true, stockLevels: { include: { warehouse: true } } } } } },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -426,7 +426,7 @@ export async function getTransfers(filters?: {
     include: {
       fromWarehouse: true,
       toWarehouse: true,
-      lines: { include: { product: true } },
+      lines: { include: { product: { include: { category: true, stockLevels: { include: { warehouse: true } } } } } },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -540,7 +540,10 @@ export async function getAdjustments(filters?: { warehouseId?: string }) {
       ...(orgId != null && { warehouse: { organizationId: orgId } }),
       ...(filters?.warehouseId && { warehouseId: filters.warehouseId }),
     },
-    include: { product: true, warehouse: true },
+    include: {
+      product: { include: { category: true, stockLevels: { include: { warehouse: true } } } },
+      warehouse: true,
+    },
     orderBy: { createdAt: "desc" },
   });
 }
@@ -624,7 +627,10 @@ export async function getRecentLedgerEntries(limit = 10) {
   const orgId = await getOrgId();
   return prisma.stockLedgerEntry.findMany({
     where: orgId != null ? { product: { organizationId: orgId } } : undefined,
-    include: { product: true, warehouse: true },
+    include: {
+      product: { include: { category: true, stockLevels: { include: { warehouse: true } } } },
+      warehouse: true,
+    },
     orderBy: { createdAt: "desc" },
     take: limit,
   });
@@ -644,7 +650,10 @@ export async function getMoveHistory(filters?: {
       ...(filters?.warehouseId && { warehouseId: filters.warehouseId }),
       ...(filters?.referenceType && { referenceType: filters.referenceType }),
     },
-    include: { product: true, warehouse: true },
+    include: {
+      product: { include: { category: true, stockLevels: { include: { warehouse: true } } } },
+      warehouse: true,
+    },
     orderBy: { createdAt: "desc" },
     take: 200,
   });
