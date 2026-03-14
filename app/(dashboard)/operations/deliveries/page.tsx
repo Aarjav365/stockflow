@@ -5,6 +5,7 @@ import { ProfileDropdown } from "@/components/profile-dropdown";
 import { Search } from "@/components/search";
 import { ThemeSwitch } from "@/components/theme-switch";
 import { getDeliveryOrders, getWarehouses, getProducts } from "@/lib/inventory";
+import { DataLoadFallback } from "@/components/data-load-fallback";
 import { DeliveriesView } from "./deliveries-view";
 
 const topNav = [
@@ -20,11 +21,19 @@ export default async function DeliveriesPage({
   searchParams: Promise<{ id?: string }>;
 }) {
   const { id } = await searchParams;
-  const [orders, warehouses, products] = await Promise.all([
-    getDeliveryOrders(),
-    getWarehouses(),
-    getProducts(),
-  ]);
+  let orders: Awaited<ReturnType<typeof getDeliveryOrders>>;
+  let warehouses: Awaited<ReturnType<typeof getWarehouses>>;
+  let products: Awaited<ReturnType<typeof getProducts>>;
+  try {
+    [orders, warehouses, products] = await Promise.all([
+      getDeliveryOrders(),
+      getWarehouses(),
+      getProducts(),
+    ]);
+  } catch (err) {
+    console.error("Deliveries data load failed:", err);
+    return <DataLoadFallback pageName="delivery orders" />;
+  }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">

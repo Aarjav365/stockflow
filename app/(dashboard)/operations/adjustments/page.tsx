@@ -5,6 +5,7 @@ import { ProfileDropdown } from "@/components/profile-dropdown";
 import { Search } from "@/components/search";
 import { ThemeSwitch } from "@/components/theme-switch";
 import { getAdjustments, getWarehouses, getProducts } from "@/lib/inventory";
+import { DataLoadFallback } from "@/components/data-load-fallback";
 import { AdjustmentsView } from "./adjustments-view";
 
 const topNav = [
@@ -15,11 +16,19 @@ const topNav = [
 ];
 
 export default async function AdjustmentsPage() {
-  const [adjustments, warehouses, products] = await Promise.all([
-    getAdjustments(),
-    getWarehouses(),
-    getProducts(),
-  ]);
+  let adjustments: Awaited<ReturnType<typeof getAdjustments>>;
+  let warehouses: Awaited<ReturnType<typeof getWarehouses>>;
+  let products: Awaited<ReturnType<typeof getProducts>>;
+  try {
+    [adjustments, warehouses, products] = await Promise.all([
+      getAdjustments(),
+      getWarehouses(),
+      getProducts(),
+    ]);
+  } catch (err) {
+    console.error("Adjustments data load failed:", err);
+    return <DataLoadFallback pageName="adjustments" />;
+  }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">

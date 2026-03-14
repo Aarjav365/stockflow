@@ -5,6 +5,7 @@ import { ProfileDropdown } from "@/components/profile-dropdown";
 import { Search } from "@/components/search";
 import { ThemeSwitch } from "@/components/theme-switch";
 import { getMoveHistory, getProducts, getWarehouses } from "@/lib/inventory";
+import { DataLoadFallback } from "@/components/data-load-fallback";
 import { MoveHistoryView } from "./move-history-view";
 
 const topNav = [
@@ -20,15 +21,23 @@ export default async function MoveHistoryPage({
   searchParams: Promise<{ productId?: string; warehouseId?: string; type?: string }>;
 }) {
   const params = await searchParams;
-  const [entries, products, warehouses] = await Promise.all([
-    getMoveHistory({
-      productId: params.productId,
-      warehouseId: params.warehouseId,
-      referenceType: params.type,
-    }),
-    getProducts(),
-    getWarehouses(),
-  ]);
+  let entries: Awaited<ReturnType<typeof getMoveHistory>>;
+  let products: Awaited<ReturnType<typeof getProducts>>;
+  let warehouses: Awaited<ReturnType<typeof getWarehouses>>;
+  try {
+    [entries, products, warehouses] = await Promise.all([
+      getMoveHistory({
+        productId: params.productId,
+        warehouseId: params.warehouseId,
+        referenceType: params.type,
+      }),
+      getProducts(),
+      getWarehouses(),
+    ]);
+  } catch (err) {
+    console.error("Move history data load failed:", err);
+    return <DataLoadFallback pageName="move history" />;
+  }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">

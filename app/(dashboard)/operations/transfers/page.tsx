@@ -5,6 +5,7 @@ import { ProfileDropdown } from "@/components/profile-dropdown";
 import { Search } from "@/components/search";
 import { ThemeSwitch } from "@/components/theme-switch";
 import { getTransfers, getWarehouses, getProducts } from "@/lib/inventory";
+import { DataLoadFallback } from "@/components/data-load-fallback";
 import { TransfersView } from "./transfers-view";
 
 const topNav = [
@@ -20,11 +21,19 @@ export default async function TransfersPage({
   searchParams: Promise<{ id?: string }>;
 }) {
   const { id } = await searchParams;
-  const [transfers, warehouses, products] = await Promise.all([
-    getTransfers(),
-    getWarehouses(),
-    getProducts(),
-  ]);
+  let transfers: Awaited<ReturnType<typeof getTransfers>>;
+  let warehouses: Awaited<ReturnType<typeof getWarehouses>>;
+  let products: Awaited<ReturnType<typeof getProducts>>;
+  try {
+    [transfers, warehouses, products] = await Promise.all([
+      getTransfers(),
+      getWarehouses(),
+      getProducts(),
+    ]);
+  } catch (err) {
+    console.error("Transfers data load failed:", err);
+    return <DataLoadFallback pageName="transfers" />;
+  }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">

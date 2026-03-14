@@ -5,6 +5,7 @@ import { ProfileDropdown } from "@/components/profile-dropdown";
 import { Search } from "@/components/search";
 import { ThemeSwitch } from "@/components/theme-switch";
 import { getReceipts, getWarehouses, getProducts } from "@/lib/inventory";
+import { DataLoadFallback } from "@/components/data-load-fallback";
 import { ReceiptsView } from "./receipts-view";
 
 const topNav = [
@@ -20,11 +21,19 @@ export default async function ReceiptsPage({
   searchParams: Promise<{ id?: string }>;
 }) {
   const { id } = await searchParams;
-  const [receipts, warehouses, products] = await Promise.all([
-    getReceipts(),
-    getWarehouses(),
-    getProducts(),
-  ]);
+  let receipts: Awaited<ReturnType<typeof getReceipts>>;
+  let warehouses: Awaited<ReturnType<typeof getWarehouses>>;
+  let products: Awaited<ReturnType<typeof getProducts>>;
+  try {
+    [receipts, warehouses, products] = await Promise.all([
+      getReceipts(),
+      getWarehouses(),
+      getProducts(),
+    ]);
+  } catch (err) {
+    console.error("Receipts data load failed:", err);
+    return <DataLoadFallback pageName="receipts" />;
+  }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">

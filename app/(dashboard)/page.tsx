@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Package, PackageMinus, PackagePlus, AlertTriangle, ArrowLeftRight, ClipboardList, Activity, TrendingDown } from "lucide-react";
 import Link from "next/link";
 import { Header } from "@/components/layout/header";
@@ -161,7 +162,9 @@ export default async function DashboardPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <DashboardFilters warehouses={warehouses} categories={categories} />
+              <Suspense fallback={<div className="h-9 w-48 animate-pulse rounded-md bg-muted" />}>
+                <DashboardFilters warehouses={warehouses} categories={categories} />
+              </Suspense>
             </CardContent>
           </Card>
 

@@ -5,6 +5,7 @@ import { ProfileDropdown } from "@/components/profile-dropdown";
 import { Search } from "@/components/search";
 import { ThemeSwitch } from "@/components/theme-switch";
 import { getProducts, getLowStockProducts, getCategories } from "@/lib/inventory";
+import { DataLoadFallback } from "@/components/data-load-fallback";
 import { ProductsTable } from "./products-table";
 
 const topNav = [
@@ -21,12 +22,19 @@ export default async function ProductsPage({
 }) {
   const params = await searchParams;
   const lowStockOnly = params.lowStock === "1";
-  const [products, categories] = await Promise.all([
-    lowStockOnly
-      ? getLowStockProducts(500)
-      : getProducts({ categoryId: params.categoryId, skuSearch: params.sku }),
-    getCategories(),
-  ]);
+  let products: Awaited<ReturnType<typeof getProducts>>;
+  let categories: Awaited<ReturnType<typeof getCategories>>;
+  try {
+    [products, categories] = await Promise.all([
+      lowStockOnly
+        ? getLowStockProducts(500)
+        : getProducts({ categoryId: params.categoryId, skuSearch: params.sku }),
+      getCategories(),
+    ]);
+  } catch (err) {
+    console.error("Products data load failed:", err);
+    return <DataLoadFallback pageName="products" />;
+  }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
