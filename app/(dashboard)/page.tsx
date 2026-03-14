@@ -35,17 +35,38 @@ const topNav = [
 ];
 
 export default async function DashboardPage() {
-  const [kpis, recentReceipts, recentDeliveries, recentTransfers, warehouses, categories, lowStockProducts, recentActivity] =
-    await Promise.all([
-      getDashboardKpis(),
-      getReceipts({ status: DocumentStatus.Draft }),
-      getDeliveryOrders({ status: DocumentStatus.Draft }),
-      getTransfers({ status: DocumentStatus.Draft }),
-      getWarehouses(),
-      getCategories(),
-      getLowStockProducts(10),
-      getRecentLedgerEntries(10),
-    ]);
+  let kpis: Awaited<ReturnType<typeof getDashboardKpis>>;
+  let recentReceipts: Awaited<ReturnType<typeof getReceipts>>;
+  let recentDeliveries: Awaited<ReturnType<typeof getDeliveryOrders>>;
+  let recentTransfers: Awaited<ReturnType<typeof getTransfers>>;
+  let warehouses: Awaited<ReturnType<typeof getWarehouses>>;
+  let categories: Awaited<ReturnType<typeof getCategories>>;
+  let lowStockProducts: Awaited<ReturnType<typeof getLowStockProducts>>;
+  let recentActivity: Awaited<ReturnType<typeof getRecentLedgerEntries>>;
+
+  try {
+    [kpis, recentReceipts, recentDeliveries, recentTransfers, warehouses, categories, lowStockProducts, recentActivity] =
+      await Promise.all([
+        getDashboardKpis(),
+        getReceipts({ status: DocumentStatus.Draft }),
+        getDeliveryOrders({ status: DocumentStatus.Draft }),
+        getTransfers({ status: DocumentStatus.Draft }),
+        getWarehouses(),
+        getCategories(),
+        getLowStockProducts(10),
+        getRecentLedgerEntries(10),
+      ]);
+  } catch (err) {
+    console.error("Dashboard data load failed:", err);
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 p-8">
+        <p className="text-sm text-muted-foreground">
+          Unable to load dashboard. Check DATABASE_URL and AUTH_SECRET in your deployment environment.
+        </p>
+        <a href="/" className="text-sm text-primary underline">Try again</a>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">

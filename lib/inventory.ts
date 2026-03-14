@@ -11,9 +11,13 @@ const PENDING_STATUSES: DocumentStatus[] = [
 ];
 
 async function getOrgId(): Promise<string | null> {
-  const session = await auth();
-  const orgId = (session?.user as { organizationId?: string } | undefined)?.organizationId ?? null;
-  return orgId ?? null;
+  try {
+    const session = await auth();
+    const orgId = (session?.user as { organizationId?: string } | undefined)?.organizationId ?? null;
+    return orgId ?? null;
+  } catch {
+    return null;
+  }
 }
 
 // ----- KPIs for Dashboard -----
