@@ -1,0 +1,228 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Organization {
+  id          String    @id @default(cuid())
+  name        String    @default("My Organization")
+  users       User[]
+  warehouses  Warehouse[]
+  categories  Category[]
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model User {
+  id             String    @id @default(cuid())
+  name           String?
+  email          String    @unique
+  emailVerified  DateTime?
+  image          String?
+  hashedPassword String?
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+enum OtpType {
+  Registration
+  PasswordReset
+}
+
+model VerificationCode {
+  id        String   @id @default(cuid())
+  email     String
+  code      String   // 6-digit OTP
+  type      OtpType
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+// ---- StockFlow ----
+
+model Category {
+  id             String    @id @default(cuid())
+  name           String
+  slug           String
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  products       Product[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  @@unique([organizationId, slug])
+}
+
+model Product {
+  id               String    @id @default(cuid())
+  name             String
+  sku              String
+  categoryId       String
+  category         Category  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  organizationId   String?
+  organization     Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  unitOfMeasure   String    // e.g. "kg", "pcs", "box"
+  reorderThreshold Int?     // alert when stock below this
+  stockLevels      StockLevel[]
+  receiptLines     ReceiptLine[]
+  deliveryLines    DeliveryLine[]
+  transferLines    TransferLine[]
+  adjustments      StockAdjustment[]
+  ledgerEntries    StockLedgerEntry[]
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  @@unique([organizationId, sku])
+}
+
+model Warehouse {
+  id               String    @id @default(cuid())
+  name             String
+  code             String?
+  address          String?
+  organizationId   String?
+  organization     Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  stockLevels      StockLevel[]
+  receipts         Receipt[]
+  deliveryOrders   DeliveryOrder[]
+  transfersFrom    InternalTransfer[] @relation("FromWarehouse")
+  transfersTo      InternalTransfer[]   @relation("ToWarehouse")
+  adjustments      StockAdjustment[]
+  ledgerEntries    StockLedgerEntry[]
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  @@unique([organizationId, code])
+}
+
+model StockLevel {
+  productId   String
+  warehouseId String
+  quantity    Int      @default(0)
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  @@id([productId, warehouseId])
+}
+
+enum DocumentStatus {
+  Draft
+  Waiting
+  Ready
+  Done
+  Canceled
+}
+
+model Receipt {
+  id             String         @id @default(cuid())
+  documentNumber String         @unique
+  supplier       String?
+  status         DocumentStatus @default(Draft)
+  warehouseId    String
+  warehouse      Warehouse      @relation(fields: [warehouseId], references: [id])
+  userId         String?
+  lines          ReceiptLine[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model ReceiptLine {
+  id                String   @id @default(cuid())
+  receiptId         String
+  receipt           Receipt  @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+  productId         String
+  product           Product  @relation(fields: [productId], references: [id])
+  quantityOrdered   Int      @default(0)
+  quantityReceived  Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model DeliveryOrder {
+  id             String         @id @default(cuid())
+  documentNumber String         @unique
+  customerRef    String?
+  status         DocumentStatus @default(Draft)
+  warehouseId    String
+  warehouse      Warehouse      @relation(fields: [warehouseId], references: [id])
+  userId         String?
+  lines          DeliveryLine[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model DeliveryLine {
+  id              String        @id @default(cuid())
+  deliveryOrderId String
+  deliveryOrder   DeliveryOrder @relation(fields: [deliveryOrderId], references: [id], onDelete: Cascade)
+  productId       String
+  product         Product       @relation(fields: [productId], references: [id])
+  quantity        Int
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model InternalTransfer {
+  id               String         @id @default(cuid())
+  documentNumber   String         @unique
+  status           DocumentStatus @default(Draft)
+  fromWarehouseId  String
+  toWarehouseId    String
+  fromWarehouse    Warehouse      @relation("FromWarehouse", fields: [fromWarehouseId], references: [id])
+  toWarehouse      Warehouse      @relation("ToWarehouse", fields: [toWarehouseId], references: [id])
+  userId           String?
+  lines            TransferLine[]
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
+
+model TransferLine {
+  id         String           @id @default(cuid())
+  transferId String
+  transfer   InternalTransfer @relation(fields: [transferId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product          @relation(fields: [productId], references: [id])
+  quantity   Int
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+}
+
+model StockAdjustment {
+  id               String         @id @default(cuid())
+  documentNumber   String         @unique
+  warehouseId      String
+  warehouse        Warehouse      @relation(fields: [warehouseId], references: [id])
+  productId        String
+  product          Product        @relation(fields: [productId], references: [id])
+  quantityRecorded Int
+  quantityCounted  Int
+  reason           String?
+  status           DocumentStatus @default(Draft)
+  userId           String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
+
+model StockLedgerEntry {
+  id             String   @id @default(cuid())
+  productId      String
+  product        Product   @relation(fields: [productId], references: [id])
+  warehouseId    String
+  warehouse      Warehouse @relation(fields: [warehouseId], references: [id])
+  quantityChange Int      // + or -
+  referenceType  String   // Receipt, Delivery, Transfer, Adjustment
+  referenceId    String
+  userId         String?
+  createdAt      DateTime @default(now())
+}
