@@ -27,9 +27,27 @@ const PENDING_STATUSES: DocumentStatus[] = [
 async function getOrgId(): Promise<string | null> {
   try {
     const session = await auth();
-    const orgId = (session?.user as { organizationId?: string } | undefined)?.organizationId ?? null;
-    return orgId ?? null;
-  } catch {
+    if (!session?.user?.id) return null;
+
+    const orgIdFromSession = (session.user as { organizationId?: string }).organizationId;
+    if (orgIdFromSession) return orgIdFromSession;
+
+    const dbUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { organizationId: true },
+    });
+    if (dbUser?.organizationId) return dbUser.organizationId;
+
+    const org = await prisma.organization.create({
+      data: { name: `${session.user.name ?? session.user.email ?? "My"}'s Organization` },
+    });
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { organizationId: org.id },
+    });
+    return org.id;
+  } catch (e) {
+    console.error("[getOrgId]", e);
     return null;
   }
 }
