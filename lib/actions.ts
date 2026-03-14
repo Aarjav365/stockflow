@@ -51,7 +51,7 @@ export async function registerUser(data: {
 
   const result = await sendOtpEmail(data.email, code, "registration");
   if (!result.success) {
-    return { error: "Failed to send verification email. Please try again." };
+    return { error: `Failed to send verification email: ${result.error}` };
   }
 
   return { success: true as const, redirectTo: `/otp?email=${encodeURIComponent(data.email)}&type=registration` };
@@ -72,7 +72,7 @@ export async function sendForgotPasswordOtp(email: string) {
 
   const result = await sendOtpEmail(email, code, "password_reset");
   if (!result.success) {
-    return { error: "Failed to send email. Please try again." };
+    return { error: `Failed to send reset email: ${result.error}` };
   }
 
   return { success: true as const, redirectTo: `/otp?email=${encodeURIComponent(email)}&type=password_reset` };
