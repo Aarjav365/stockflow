@@ -15,7 +15,7 @@ Follow these steps to send OTP emails from your own domain in production.
 
 1. In the left sidebar, click **Domains** (or go to [https://resend.com/domains](https://resend.com/domains)).
 2. Click **Add Domain**.
-3. Enter your production domain: `stack-flow.dev` (no `www`, no `https://`).
+3. Enter your production domain: `stock-flow.dev` (no `www`, no `https://`).
 4. Click **Add** (or **Verify**).
 
 ### Step 3: Add DNS records
@@ -54,9 +54,9 @@ In your **production** host (e.g. Vercel, Railway, Render):
   | Name                | Value                                    | Notes                    |
   | ------------------- | ---------------------------------------- | ------------------------ |
   | `RESEND_API_KEY`    | `re_xxxxxxxxxxxx`                        | From Resend → API Keys   |
-  | `RESEND_FROM_EMAIL` | `CoreInventory <noreply@stack-flow.dev>` | Use your verified domain |
+  | `RESEND_FROM_EMAIL` | `StockFlow <noreply@stock-flow.dev>` | Use your verified domain |
 
-   For your domain use: `CoreInventory <noreply@stack-flow.dev>`. The part before `@` (e.g. `noreply`) can be anything you like (e.g. `info`, `hello`).
+   For your domain use: `StockFlow <noreply@stock-flow.dev>`. The part before `@` (e.g. `noreply`) can be anything you like (e.g. `info`, `hello`).
 3. Save. Redeploy the app if your platform doesn’t auto-redeploy on env changes.
 
 ### Step 6: Get your API key (if needed)
@@ -79,7 +79,7 @@ In your **production** host (e.g. Vercel, Railway, Render):
 
 1. Deploy the app with the env vars above.
 2. On the live app: sign up with a real email or use “Forgot password.”
-3. Check that the email arrives and that the **From** address is `noreply@stack-flow.dev` (or whatever you set in `RESEND_FROM_EMAIL`).
+3. Check that the email arrives and that the **From** address is `noreply@stock-flow.dev` (or whatever you set in `RESEND_FROM_EMAIL`).
 
 ---
 
@@ -89,7 +89,7 @@ In your **production** host (e.g. Vercel, Railway, Render):
 - All DNS records (SPF, DKIM, etc.) added at your DNS provider  
 - Domain status in Resend = **Verified**  
 - `RESEND_API_KEY` set in production  
-- `RESEND_FROM_EMAIL=CoreInventory <noreply@stack-flow.dev>` set in production  
+- `RESEND_FROM_EMAIL=StockFlow <noreply@stock-flow.dev>` set in production  
 - App redeployed after changing env vars  
 - Tested sign-up or forgot-password email in production
 
@@ -100,4 +100,22 @@ In your **production** host (e.g. Vercel, Railway, Render):
 - **Emails not sending:** Check Resend → Logs for errors; confirm `RESEND_API_KEY` and `RESEND_FROM_EMAIL` in production.
 - **Domain not verifying:** Wait up to 48 hours; double-check DNS name/value and that you’re editing the correct zone (root vs subdomain).
 - **Still using [onboarding@resend.dev](mailto:onboarding@resend.dev):** `RESEND_FROM_EMAIL` is not set or not loaded in production; redeploy after setting it.
+
+### Works locally but fails in production
+
+If sign-up sends the OTP email locally but you get an error on **production** (e.g. toast: "Failed to send verification email: ..." or a 500 on the sign-up POST):
+
+1. **Env vars not set in production**  
+   `.env` is not deployed. In your host (Vercel, Railway, etc.) go to **Project → Settings → Environment Variables** and add for **Production**:
+   - `RESEND_API_KEY` = your Resend API key (`re_...`)
+   - `RESEND_FROM_EMAIL` = `StockFlow <noreply@stock-flow.dev>` (or your verified domain)
+
+2. **Redeploy after adding env vars**  
+   Many platforms do not apply new variables to existing runs. Trigger a new deployment after saving env vars.
+
+3. **Domain not verified in Resend**  
+   Sending from `noreply@stock-flow.dev` requires the domain **stock-flow.dev** to be **Verified** in [Resend → Domains](https://resend.com/domains). If it isn't, Resend returns an error like: *"The stock-flow.dev domain is not verified"*. Add the domain and the DNS records Resend shows, then verify.
+
+4. **See the exact error**  
+   In the browser: open DevTools → Network, submit sign-up, click the failing POST to `/sign-up` and check the **Response** body. The server returns the Resend error in `result.error` (e.g. missing API key, domain not verified).
 

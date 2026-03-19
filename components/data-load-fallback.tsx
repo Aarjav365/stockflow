@@ -6,7 +6,7 @@ export function DataLoadFallback({ pageName = "page" }: { pageName?: string }) {
       <p className="text-sm text-muted-foreground">
         Unable to load {pageName}. Check DATABASE_URL and AUTH_SECRET in your deployment environment.
       </p>
-      <Link href="/" className="text-sm text-primary underline">
+      <Link href="/dashboard" className="text-sm text-primary underline">
         Try again
       </Link>
     </div>

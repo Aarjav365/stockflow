@@ -147,7 +147,7 @@ export function DashboardFilters({
       <Button
         variant="secondary"
         size="sm"
-        onClick={() => router.push("/")}
+        onClick={() => router.push("/dashboard")}
       >
         Clear
       </Button>

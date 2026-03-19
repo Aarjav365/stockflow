@@ -18,7 +18,7 @@ export default function UnauthorizedPage() {
           <Button variant="outline" onClick={() => router.back()}>
             Go Back
           </Button>
-          <Button onClick={() => router.push("/")}>Back to Home</Button>
+          <Button onClick={() => router.push("/dashboard")}>Back to Home</Button>
         </div>
       </div>
     </div>

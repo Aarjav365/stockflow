@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 
 const QUICK_ACTIONS = [
-  { label: "Dashboard", href: "/", icon: LayoutDashboard },
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Products", href: "/products", icon: Package },
   { label: "Low stock products", href: "/products?lowStock=1", icon: TrendingDown },
   { label: "New receipt", href: "/operations/receipts?new=1", icon: PackagePlus },

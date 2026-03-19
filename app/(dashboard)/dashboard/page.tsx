@@ -25,11 +25,11 @@ import {
   getLowStockProducts,
   getRecentLedgerEntries,
 } from "@/lib/inventory";
-import { DashboardFilters } from "./dashboard-filters";
+import { DashboardFilters } from "../dashboard-filters";
 import { DocumentStatus } from "@/generated/prisma/client";
 
 const topNav = [
-  { title: "Dashboard", href: "/", isActive: true, disabled: false },
+  { title: "Dashboard", href: "/dashboard", isActive: true, disabled: false },
   { title: "Products", href: "/products", isActive: false, disabled: false },
   { title: "Operations", href: "/operations/receipts", isActive: false, disabled: false },
   { title: "Settings", href: "/settings/warehouses", isActive: false, disabled: false },
@@ -64,7 +64,7 @@ export default async function DashboardPage() {
         <p className="text-sm text-muted-foreground">
           Unable to load dashboard. Check DATABASE_URL and AUTH_SECRET in your deployment environment.
         </p>
-        <a href="/" className="text-sm text-primary underline">Try again</a>
+        <a href="/dashboard" className="text-sm text-primary underline">Try again</a>
       </div>
     );
   }
