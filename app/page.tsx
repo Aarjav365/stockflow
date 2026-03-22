@@ -2,12 +2,18 @@ import type { Metadata } from "next";
 import { Barlow, Instrument_Serif } from "next/font/google";
 
 import { StockflowLanding } from "@/components/landing/stockflow-landing";
+import { getSiteUrl } from "@/lib/site-url";
 import { cn } from "@/lib/utils";
 
 const homeTitle =
   "StockFlow — Multi-warehouse inventory & audit-ready ledger";
 const homeDescription =
-  "Warehouse and inventory management with receipts, deliveries, transfers, adjustments, multi-warehouse stock, and a full audit ledger.";
+  "Warehouse and inventory management with receipts, deliveries, transfers, adjustments, multi-warehouse stock, and a full audit ledger. Get started—see inventory clarity built in.";
+const siteUrl = getSiteUrl();
+const homeUrl = `${siteUrl}/`;
+const ogImageUrl = `${siteUrl}/hero.png`;
+const ogImageAlt =
+  "StockFlow — Multi-warehouse inventory with an audit-ready ledger";
 
 export const metadata: Metadata = {
   title: {
@@ -27,15 +33,33 @@ export const metadata: Metadata = {
   openGraph: {
     title: homeTitle,
     description: homeDescription,
-    url: "/",
+    url: homeUrl,
     type: "website",
+    images: [
+      {
+        url: ogImageUrl,
+        width: 1898,
+        height: 840,
+        alt: ogImageAlt,
+        type: "image/png",
+      },
+    ],
   },
   twitter: {
+    card: "summary_large_image",
     title: homeTitle,
     description: homeDescription,
+    images: [
+      {
+        url: ogImageUrl,
+        width: 1898,
+        height: 840,
+        alt: ogImageAlt,
+      },
+    ],
   },
   alternates: {
-    canonical: "/",
+    canonical: homeUrl,
   },
 };
 

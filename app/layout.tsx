@@ -11,9 +11,11 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 const siteUrl = getSiteUrl();
+const metadataBase = new URL(siteUrl);
+const ogImageUrl = new URL("/hero.png", metadataBase).href;
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase,
   title: {
     default: "StockFlow",
     template: "%s | StockFlow",
@@ -27,9 +29,26 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     siteName: "StockFlow",
+    images: [
+      {
+        url: ogImageUrl,
+        width: 1898,
+        height: 840,
+        alt: "StockFlow — Multi-warehouse inventory with an audit-ready ledger",
+        type: "image/png",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
+    images: [
+      {
+        url: ogImageUrl,
+        width: 1898,
+        height: 840,
+        alt: "StockFlow — Multi-warehouse inventory with an audit-ready ledger",
+      },
+    ],
   },
   icons: {
     icon: [{ url: "/favicon.ico", type: "image/x-icon", sizes: "any" }],
