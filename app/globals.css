@@ -45,6 +45,11 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  --animate-float-soft: floatSoft 7s ease-in-out infinite;
+  --animate-float-soft-reverse: floatSoftReverse 9s ease-in-out infinite;
+  --animate-pulse-glow: pulseGlow 5s ease-in-out infinite;
+  --animate-spin-slow: spinSlow 28s linear infinite;
 }
 
 :root {
@@ -149,3 +154,406 @@
 .animate-float-slow { animation: float-slow 7s ease-in-out infinite; }
 .animate-float-slower { animation: float-slower 9s ease-in-out infinite; }
 .animate-glow-pulse { animation: glow-pulse 4s ease-in-out infinite; }
+
+@keyframes floatSoft {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(8px, -20px) scale(1.03);
+  }
+}
+
+@keyframes floatSoftReverse {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(-12px, 16px);
+  }
+}
+
+@keyframes pulseGlow {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes spinSlow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* —— Marketing landing (theme tokens only) —— */
+.landing-page .section-inset {
+  @apply px-4 sm:px-6 md:px-10 lg:px-16 xl:px-24 2xl:px-32;
+}
+
+.landing-page .section-stack {
+  @apply py-16 sm:py-24 md:py-32 lg:py-40;
+}
+
+.landing-page .section-stack-sm {
+  @apply py-12 sm:py-20 md:py-28 lg:py-36;
+}
+
+.landing-page .section-vignette-top {
+  @apply pointer-events-none absolute inset-x-0 top-0 z-1 h-[200px];
+  background: linear-gradient(to bottom, var(--background), transparent);
+}
+
+.landing-page .section-vignette-bottom {
+  @apply pointer-events-none absolute inset-x-0 bottom-0 z-1 h-[200px];
+  background: linear-gradient(to top, var(--background), transparent);
+}
+
+.landing-page .hero-fade-bottom {
+  @apply pointer-events-none absolute bottom-0 left-0 right-0 z-1 h-[min(40vh,320px)] sm:h-[320px];
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--background) 88%
+  );
+}
+
+.landing-page .gradient-bg {
+  @apply pointer-events-none absolute inset-0 z-0 overflow-hidden;
+  background: var(--background);
+}
+
+.landing-page .gradient-bg__blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(72px);
+  will-change: transform, opacity;
+}
+
+.landing-page .gradient-bg--hero .gradient-bg__blob--a {
+  width: min(95vw, 780px);
+  height: min(95vw, 780px);
+  left: 50%;
+  top: 5%;
+  transform: translateX(-50%);
+  background: radial-gradient(
+    circle,
+    color-mix(in oklch, var(--chart-1) 42%, transparent) 0%,
+    color-mix(in oklch, var(--chart-2) 14%, transparent) 45%,
+    transparent 68%
+  );
+  animation: blob-drift-a 22s ease-in-out infinite;
+}
+
+.landing-page .gradient-bg--hero .gradient-bg__blob--b {
+  width: min(70vw, 520px);
+  height: min(70vw, 520px);
+  right: -8%;
+  top: 35%;
+  background: radial-gradient(
+    circle,
+    color-mix(in oklch, var(--chart-3) 35%, transparent) 0%,
+    color-mix(in oklch, var(--chart-4) 12%, transparent) 50%,
+    transparent 65%
+  );
+  animation: blob-drift-b 26s ease-in-out infinite;
+}
+
+.landing-page .gradient-bg--hero .gradient-bg__blob--c {
+  width: min(55vw, 420px);
+  height: min(55vw, 420px);
+  left: -5%;
+  bottom: 15%;
+  background: radial-gradient(
+    circle,
+    color-mix(in oklch, var(--chart-2) 28%, transparent) 0%,
+    transparent 62%
+  );
+  animation: blob-drift-c 20s ease-in-out infinite;
+}
+
+.landing-page .gradient-bg--hero .gradient-bg__mesh {
+  position: absolute;
+  inset: -40%;
+  opacity: 0.22;
+  background: conic-gradient(
+    from 210deg at 50% 40%,
+    color-mix(in oklch, var(--chart-1) 35%, transparent),
+    color-mix(in oklch, var(--chart-3) 22%, transparent),
+    color-mix(in oklch, var(--chart-4) 26%, transparent),
+    color-mix(in oklch, var(--chart-1) 35%, transparent)
+  );
+  animation: mesh-rotate 48s linear infinite;
+}
+
+.landing-page .gradient-bg--process .gradient-bg__blob--a {
+  width: min(85vw, 680px);
+  height: min(85vw, 680px);
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    circle,
+    color-mix(in oklch, var(--chart-2) 22%, transparent) 0%,
+    color-mix(in oklch, var(--chart-1) 22%, transparent) 42%,
+    transparent 68%
+  );
+  animation: blob-drift-center 24s ease-in-out infinite;
+}
+
+.landing-page .gradient-bg--process .gradient-bg__blob--b {
+  width: min(60vw, 480px);
+  height: min(60vw, 480px);
+  right: 5%;
+  top: 10%;
+  background: radial-gradient(
+    circle,
+    color-mix(in oklch, var(--chart-3) 30%, transparent) 0%,
+    transparent 60%
+  );
+  animation: blob-drift-b 20s ease-in-out infinite;
+}
+
+.landing-page .gradient-bg--stats .gradient-bg__blob--a {
+  width: min(90vw, 720px);
+  height: min(90vw, 720px);
+  left: 30%;
+  top: 40%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    circle,
+    color-mix(in oklch, var(--muted-foreground) 18%, transparent) 0%,
+    color-mix(in oklch, var(--chart-1) 12%, transparent) 50%,
+    transparent 70%
+  );
+  animation: blob-drift-center 28s ease-in-out infinite;
+}
+
+.landing-page .gradient-bg--stats .gradient-bg__blob--b {
+  width: min(50vw, 400px);
+  height: min(50vw, 400px);
+  right: 10%;
+  bottom: 20%;
+  background: radial-gradient(
+    circle,
+    color-mix(in oklch, var(--chart-2) 22%, transparent) 0%,
+    transparent 62%
+  );
+  animation: blob-drift-b 22s ease-in-out infinite;
+}
+
+.landing-page .gradient-bg--cta .gradient-bg__blob--a {
+  width: min(100vw, 900px);
+  height: min(100vw, 900px);
+  left: 50%;
+  top: 30%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    circle,
+    color-mix(in oklch, var(--chart-4) 24%, transparent) 0%,
+    color-mix(in oklch, var(--chart-1) 22%, transparent) 40%,
+    transparent 65%
+  );
+  animation: blob-drift-center 25s ease-in-out infinite;
+}
+
+.landing-page .gradient-bg--cta .gradient-bg__blob--b {
+  width: min(70vw, 560px);
+  height: min(70vw, 560px);
+  left: 10%;
+  bottom: 0;
+  background: radial-gradient(
+    circle,
+    color-mix(in oklch, var(--chart-2) 22%, transparent) 0%,
+    transparent 58%
+  );
+  animation: blob-drift-a 23s ease-in-out infinite;
+}
+
+.landing-page .gradient-bg--cta .gradient-bg__blob--c {
+  width: min(45vw, 360px);
+  height: min(45vw, 360px);
+  right: 5%;
+  top: 15%;
+  background: radial-gradient(
+    circle,
+    color-mix(in oklch, var(--chart-3) 18%, transparent) 0%,
+    transparent 55%
+  );
+  animation: blob-drift-c 21s ease-in-out infinite;
+}
+
+@keyframes blob-drift-center {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate(-48%, -46%) scale(1.06);
+    opacity: 0.72;
+  }
+}
+
+@keyframes blob-drift-a {
+  0%,
+  100% {
+    transform: translate(-50%, 0) scale(1);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translate(-46%, 4%) scale(1.06);
+    opacity: 0.75;
+  }
+}
+
+@keyframes blob-drift-b {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.45;
+  }
+  50% {
+    transform: translate(-3%, 5%) scale(1.08);
+    opacity: 0.68;
+  }
+}
+
+@keyframes blob-drift-c {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translate(4%, -3%) scale(1.05);
+    opacity: 0.62;
+  }
+}
+
+@keyframes mesh-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.landing-page .liquid-glass,
+.landing-page .liquid-glass-strong {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid color-mix(in oklch, var(--border) 85%, transparent);
+  background: color-mix(in oklch, var(--card) 72%, transparent);
+  background-blend-mode: normal;
+}
+
+.landing-page .liquid-glass {
+  backdrop-filter: blur(10px);
+  box-shadow: inset 0 1px 0
+    color-mix(in oklch, var(--foreground) 5%, transparent);
+}
+
+.landing-page .liquid-glass-strong {
+  backdrop-filter: blur(24px);
+  box-shadow:
+    0 4px 24px color-mix(in oklch, var(--foreground) 4%, transparent),
+    inset 0 1px 0 color-mix(in oklch, var(--foreground) 6%, transparent);
+}
+
+.landing-page .glass-panel-glow {
+  box-shadow:
+    0 0 0 1px color-mix(in oklch, var(--border) 90%, transparent),
+    0 24px 80px -20px color-mix(in oklch, var(--chart-1) 16%, transparent),
+    inset 0 1px 0 color-mix(in oklch, var(--foreground) 6%, transparent);
+}
+
+.landing-page .text-gradient-aurora {
+  background: linear-gradient(
+    115deg,
+    var(--chart-1),
+    var(--chart-3),
+    var(--chart-2),
+    var(--chart-4)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.landing-page .text-gradient-frost {
+  background: linear-gradient(
+    180deg,
+    var(--foreground) 0%,
+    color-mix(in oklch, var(--foreground) 42%, transparent) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.landing-page .eyebrow {
+  font-family: var(--font-landing-body), ui-sans-serif, system-ui, sans-serif;
+  @apply text-[10px] font-semibold uppercase tracking-[0.28em] text-muted-foreground;
+}
+
+.landing-page .bg-grid-faint {
+  background-image:
+    linear-gradient(
+      color-mix(in oklch, var(--foreground) 5%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      color-mix(in oklch, var(--foreground) 5%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 72px 72px;
+}
+
+.landing-page .noise-film {
+  pointer-events: none;
+  opacity: 0.04;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.landing-page .quote-mark {
+  font-family: var(--font-landing-heading), ui-serif, Georgia, serif;
+  @apply text-7xl leading-none text-muted-foreground/20 md:text-8xl;
+}
+
+.landing-page .faq-details {
+  @apply rounded-2xl px-4 py-1 transition-colors sm:px-5;
+}
+
+.landing-page .faq-details[open] {
+  background: color-mix(in oklch, var(--muted) 55%, transparent);
+}
+
+.landing-page .faq-summary {
+  font-family: var(--font-landing-body), ui-sans-serif, system-ui, sans-serif;
+  @apply flex cursor-pointer list-none items-center justify-between gap-3 py-4 text-sm font-semibold tracking-tight text-foreground sm:gap-4;
+}
+
+.landing-page .faq-summary::-webkit-details-marker {
+  display: none;
+}
+
+.landing-page .faq-body {
+  font-family: var(--font-landing-body), ui-sans-serif, system-ui, sans-serif;
+  @apply border-t border-border pb-4 pt-3 text-sm font-light leading-relaxed text-muted-foreground;
+}
+
+.landing-page .font-heading {
+  font-family: var(--font-landing-heading), ui-serif, Georgia, serif;
+}
+
+.landing-page .font-body {
+  font-family: var(--font-landing-body), ui-sans-serif, system-ui, sans-serif;
+}
