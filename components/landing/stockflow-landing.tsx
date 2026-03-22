@@ -26,6 +26,38 @@ import {
 } from "@/lib/data/landing-content";
 import { cn } from "@/lib/utils";
 
+type HeadingAccentVariant = "frost" | "aurora";
+
+/** Wraps the first case-insensitive match of `accent` in `text` with a landing gradient. */
+function HeadingAccent({
+  text,
+  accent,
+  variant = "frost",
+}: {
+  text: string;
+  accent: string;
+  variant?: HeadingAccentVariant;
+}) {
+  const cls =
+    variant === "frost" ? "text-gradient-frost" : "text-gradient-aurora";
+  const lower = text.toLowerCase();
+  const needle = accent.toLowerCase();
+  const idx = lower.indexOf(needle);
+  if (idx < 0) {
+    return text;
+  }
+  const before = text.slice(0, idx);
+  const mid = text.slice(idx, idx + accent.length);
+  const after = text.slice(idx + accent.length);
+  return (
+    <>
+      {before}
+      <span className={cls}>{mid}</span>
+      {after}
+    </>
+  );
+}
+
 function GradientBackdrop({
   variant,
 }: {
@@ -93,12 +125,6 @@ const cardHover = {
   },
 } as const;
 
-const experienceCardBefore =
-  "before:from-foreground/8 before:via-transparent before:to-transparent";
-
-const experienceCardIconWell =
-  "from-muted/50 to-muted/15 ring-border/70 dark:from-muted/35 dark:to-muted/10";
-
 /** Giant step index behind the platform row headings — same box for 01 and 02 */
 const serviceStepNumClass =
   "pointer-events-none absolute -left-2 -top-7 z-0 select-none font-body text-[clamp(4.5rem,15vw,9.5rem)] font-bold leading-none text-foreground/5 md:-left-3 md:-top-11 lg:text-[clamp(5rem,16vw,10rem)]";
@@ -129,21 +155,29 @@ const whyCards = [
     Icon: Package,
     title: "Catalog & SKUs",
     body: "Categories, units of measure, and reorder thresholds that drive low-stock alerts—not guesswork.",
+    accent: "SKUs",
+    accentVariant: "aurora" as const,
   },
   {
     Icon: Building2,
     title: "Multi-warehouse",
     body: "Real-time levels per location. Transfers with clear from/to so nothing disappears in transit.",
+    accent: "warehouse",
+    accentVariant: "frost" as const,
   },
   {
     Icon: History,
     title: "Full traceability",
     body: "A stock ledger and move history for every quantity change—audit-ready without a second system.",
+    accent: "traceability",
+    accentVariant: "frost" as const,
   },
   {
     Icon: Shield,
     title: "Auth you can enforce",
     body: "JWT sessions, bcrypt passwords, OTP verification, and middleware that actually blocks protected routes.",
+    accent: "enforce",
+    accentVariant: "aurora" as const,
   },
 ] as const;
 
@@ -258,18 +292,15 @@ export function StockflowLanding() {
         id="partners"
         className="section-inset section-stack scroll-mt-24 sm:scroll-mt-28"
       >
-        <div className="mx-auto flex max-w-7xl flex-col gap-20 lg:flex-row lg:items-end lg:justify-between lg:gap-24">
-          <div className="max-w-lg lg:max-w-md">
+        <div className="mx-auto flex max-w-7xl flex-col gap-12 lg:flex-row lg:items-end lg:justify-between lg:gap-16">
+          <div className="max-w-md shrink-0">
             <SectionBadge tone="muted">Who it&apos;s for</SectionBadge>
             <h2 className="font-body text-3xl font-semibold leading-[1.1] tracking-tight text-foreground md:text-4xl lg:text-[2.75rem]">
-              Built for teams that move physical goods.
+              Built for teams that move{" "}
+              <span className="text-gradient-frost">physical</span> goods.
             </h2>
-            <p className="mt-4 font-body text-sm font-light leading-relaxed text-muted-foreground">
-              From single-site retailers to multi-node networks—if stock has to
-              be right on paper and on the floor, StockFlow fits.
-            </p>
           </div>
-          <div className="flex flex-wrap items-baseline gap-x-6 gap-y-3 sm:gap-x-10 sm:gap-y-4 lg:max-w-xl lg:justify-end lg:gap-x-11">
+          <div className="flex flex-wrap items-baseline gap-x-8 gap-y-2 sm:gap-x-10 lg:max-w-xl lg:justify-end">
             {partners.map((name) => (
               <span
                 key={name}
@@ -300,7 +331,7 @@ export function StockflowLanding() {
         <div className="relative z-10 mx-auto flex min-h-0 max-w-3xl flex-col items-center px-4 py-12 text-center sm:py-16 md:max-w-2xl md:py-24">
           <SectionBadge tone="solid">How it works</SectionBadge>
           <h2 className="mt-2 font-heading text-4xl italic leading-[0.95] tracking-tight text-foreground md:text-6xl lg:text-7xl">
-            Documents first.
+            <span className="text-gradient-frost">Documents</span> first.
             <span className="mt-2 block text-gradient-aurora">Stock follows.</span>
           </h2>
           <p className="mt-8 max-w-lg font-body text-base font-light leading-relaxed text-muted-foreground">
@@ -308,29 +339,6 @@ export function StockflowLanding() {
             document advances through Draft → Waiting → Ready → Done, your
             ledger and on-hand quantities stay aligned—no shadow spreadsheets.
           </p>
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-            className="liquid-glass-strong glass-panel-glow mt-16 w-full max-w-xl rounded-3xl px-9 py-11 text-left md:px-12 md:py-12"
-          >
-            <p className="font-body text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-              Document numbers
-            </p>
-            <p className="mt-3 font-body text-base font-semibold leading-snug text-foreground">
-              Auto-generated codes like REC-0001, DEL-0001, TRF-0001, and
-              ADJ-0001—with collision-safe creation when two people save at once.
-            </p>
-            <p className="mt-3 font-body text-sm font-light leading-relaxed text-muted-foreground">
-              Every line ties back to products, warehouses, and the stock
-              ledger—so finance and ops read the same story.
-            </p>
-          </motion.div>
-          <Link href="/sign-up" className={`${primaryCta} mt-12`}>
-            Get started
-            <ArrowUpRight className="size-4" aria-hidden />
-          </Link>
         </div>
       </section>
 
@@ -339,7 +347,8 @@ export function StockflowLanding() {
           <div className="max-w-lg shrink-0">
             <SectionBadge>The playbook</SectionBadge>
             <h2 className="font-heading text-4xl italic leading-[0.92] tracking-tight text-foreground md:text-5xl lg:text-[3.5rem]">
-              From org setup to daily ops.
+              From org setup to{" "}
+              <span className="text-gradient-frost">daily</span> ops.
             </h2>
             <p className="mt-6 font-body text-base font-light leading-relaxed text-muted-foreground">
               Four pillars: isolation, documents, visibility, and the UX layer
@@ -348,7 +357,8 @@ export function StockflowLanding() {
           </div>
         </div>
         <div className="mx-auto mt-20 grid max-w-7xl grid-cols-1 gap-6 md:mt-28 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
-          {processSteps.map(({ step, title, body }, i) => (
+          {processSteps.map(
+            ({ step, title, body, accent, accentVariant }, i) => (
             <motion.article
               key={step}
               {...fadeUp}
@@ -373,13 +383,18 @@ export function StockflowLanding() {
                   i === 0 ? "text-foreground" : "text-foreground/90"
                 }`}
               >
-                {title}
+                <HeadingAccent
+                  text={title}
+                  accent={accent}
+                  variant={accentVariant ?? "frost"}
+                />
               </h3>
               <p className="mt-2 font-body text-sm font-light leading-relaxed text-muted-foreground">
                 {body}
               </p>
             </motion.article>
-          ))}
+          )
+        )}
         </div>
       </section>
 
@@ -391,9 +406,9 @@ export function StockflowLanding() {
           <div>
             <p className="eyebrow">Platform</p>
             <h2 className="mt-3 max-w-xl font-heading text-4xl italic leading-[0.92] text-foreground md:text-5xl">
-              Warehouse depth.
+              Warehouse <span className="text-gradient-frost">depth.</span>
               <span className="mt-1 block font-body text-2xl font-semibold tracking-tight not-italic text-muted-foreground md:text-3xl">
-                App simplicity.
+                App <span className="text-gradient-aurora">simplicity.</span>
               </span>
             </h2>
           </div>
@@ -410,7 +425,8 @@ export function StockflowLanding() {
                 01
               </span>
               <h3 className="relative z-10 font-heading text-2xl italic tracking-tight text-foreground md:text-4xl lg:text-5xl">
-                Products &amp; on-hand.
+                Products &amp;{" "}
+                <span className="text-gradient-aurora">on-hand.</span>
               </h3>
               <p className="relative z-10 mt-2 font-body text-sm font-semibold text-muted-foreground">
                 SKUs, categories, units.
@@ -449,7 +465,8 @@ export function StockflowLanding() {
                 02
               </span>
               <h3 className="relative z-10 font-heading text-2xl italic tracking-tight text-foreground md:text-4xl lg:text-5xl">
-                Ledger &amp; move history.
+                <span className="text-gradient-frost">Ledger</span> &amp; move
+                history.
               </h3>
               <p className="relative z-10 mt-2 font-body text-sm font-semibold text-chart-2">
                 Every change explained.
@@ -490,7 +507,7 @@ export function StockflowLanding() {
           <div>
             <SectionBadge tone="muted">Product surface</SectionBadge>
             <h2 className="font-heading text-4xl italic text-foreground md:text-6xl">
-              Where work happens.
+              Where <span className="text-gradient-aurora">work</span> happens.
             </h2>
           </div>
           <p className="max-w-xs font-body text-sm font-light text-muted-foreground md:text-right">
@@ -521,7 +538,11 @@ export function StockflowLanding() {
                   {featuredWork.tag}
                 </p>
                 <h3 className="mt-2 font-heading text-3xl italic text-foreground md:text-5xl">
-                  {featuredWork.title}
+                  <HeadingAccent
+                    text={featuredWork.title}
+                    accent={featuredWork.accent}
+                    variant={featuredWork.accentVariant ?? "frost"}
+                  />
                 </h3>
                 <p className="mt-3 max-w-lg font-body text-sm font-light leading-relaxed text-muted-foreground">
                   {featuredWork.description}
@@ -555,7 +576,11 @@ export function StockflowLanding() {
                   {item.tag}
                 </p>
                 <h3 className="mt-1 font-heading text-xl italic text-foreground">
-                  {item.title}
+                  <HeadingAccent
+                    text={item.title}
+                    accent={item.accent}
+                    variant={item.accentVariant ?? "frost"}
+                  />
                 </h3>
                 <p className="mt-2 flex-1 font-body text-xs font-light leading-relaxed text-muted-foreground">
                   {item.description}
@@ -582,55 +607,39 @@ export function StockflowLanding() {
                 Experience
               </SectionBadge>
               <h2 className="font-heading text-3xl italic leading-[0.95] text-foreground md:text-4xl">
-                Built for the floor and the desk.
+                Built for the <span className="text-gradient-frost">floor</span>{" "}
+                and the desk.
               </h2>
               <p className="mt-3 font-body text-sm font-light leading-relaxed text-muted-foreground">
                 Polish that doesn&apos;t get in the way—navigation, feedback,
                 and tables tuned for long shifts and quick decisions.
               </p>
             </div>
-            <ul className="mt-10 grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 md:mt-0 md:gap-5 lg:grid-cols-3">
-              {stackItems.map(({ title, detail, Icon }, i) => (
-                <motion.li
-                  key={title}
-                  {...cardHover}
-                  className={cn(
-                    "group relative overflow-hidden rounded-2xl border border-border/70 bg-card/50 p-5 shadow-sm backdrop-blur-sm transition-[border-color,box-shadow] duration-300",
-                    "hover:border-border hover:shadow-md",
-                    "before:pointer-events-none before:absolute before:inset-0 before:bg-gradient-to-br before:opacity-30 before:transition-opacity group-hover:before:opacity-90",
-                    experienceCardBefore
-                  )}
-                >
-                  <div className="relative flex flex-col gap-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <span className="font-body text-[11px] font-bold tracking-[0.2em] text-muted-foreground tabular-nums">
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                      <span
-                        className={cn(
-                          "flex size-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br shadow-inner ring-1 ring-inset backdrop-blur-sm transition-transform duration-300 group-hover:scale-[1.04]",
-                          experienceCardIconWell
-                        )}
-                      >
-                        <Icon
-                          className="size-5 text-foreground/80"
-                          strokeWidth={1.75}
-                          aria-hidden
-                        />
-                      </span>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-heading text-lg italic leading-snug tracking-tight text-foreground md:text-xl">
-                        {title}
-                      </p>
-                      <p className="mt-2 font-body text-sm font-light leading-relaxed text-muted-foreground">
-                        {detail}
-                      </p>
-                    </div>
-                  </div>
-                </motion.li>
-              ))}
-            </ul>
+            <div className="mt-10 flex-1 md:mt-0">
+              <div className="divide-y divide-border/60 rounded-2xl border border-border/50 bg-card/20">
+                {stackItems.map(({ title, detail }, i) => (
+                  <motion.div
+                    key={title}
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-40px" }}
+                    transition={{
+                      duration: 0.45,
+                      delay: Math.min(i * 0.04, 0.24),
+                      ease: [0.22, 1, 0.36, 1],
+                    }}
+                    className="px-5 py-5 sm:px-6 sm:py-6"
+                  >
+                    <p className="font-heading text-lg italic leading-snug tracking-tight text-foreground md:text-xl">
+                      {title}
+                    </p>
+                    <p className="mt-2 max-w-md font-body text-sm font-light leading-relaxed text-muted-foreground">
+                      {detail}
+                    </p>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -655,7 +664,9 @@ export function StockflowLanding() {
                   Principle
                 </p>
                 <p className="mt-4 font-heading text-3xl italic leading-[1.05] text-foreground md:text-4xl">
-                  If it moved, it should be explainable—in one system.
+                  If it moved, it should be{" "}
+                  <span className="text-gradient-frost">explainable</span>—in one
+                  system.
                 </p>
                 <p className="mt-5 font-body text-sm font-light leading-relaxed text-muted-foreground">
                   StockFlow is opinionated about traceability: documents drive
@@ -665,7 +676,7 @@ export function StockflowLanding() {
               </div>
             </div>
           </div>
-          {whyCards.map(({ Icon, title, body }) => (
+          {whyCards.map(({ Icon, title, body, accent, accentVariant }) => (
             <motion.div
               key={title}
               {...fadeUp}
@@ -676,7 +687,11 @@ export function StockflowLanding() {
                 <Icon className="size-[18px] text-foreground" aria-hidden />
               </div>
               <h3 className="mt-4 font-heading text-lg italic text-foreground">
-                {title}
+                <HeadingAccent
+                  text={title}
+                  accent={accent}
+                  variant={accentVariant}
+                />
               </h3>
               <p className="mt-2 font-body text-xs font-light leading-relaxed text-muted-foreground">
                 {body}
@@ -740,7 +755,8 @@ export function StockflowLanding() {
           <div>
             <SectionBadge tone="muted">Operators</SectionBadge>
             <h2 className="mt-2 max-w-lg font-heading text-4xl italic text-foreground md:text-5xl">
-              Built with warehouses in mind.
+              Built with{" "}
+              <span className="text-gradient-aurora">warehouses</span> in mind.
             </h2>
           </div>
           <p className="mt-6 font-body text-sm font-light text-muted-foreground md:mt-0 md:max-w-xs md:text-right">
@@ -802,7 +818,7 @@ export function StockflowLanding() {
         <div className="mx-auto max-w-3xl">
           <SectionBadge tone="muted">FAQ</SectionBadge>
           <h2 className="mt-2 text-left font-heading text-4xl italic text-foreground md:text-5xl">
-            Straight answers.
+            Straight <span className="text-gradient-frost">answers.</span>
           </h2>
           <p className="mt-4 font-body text-sm font-light text-muted-foreground">
             Security, tenancy, documents, and the ledger—answered upfront.

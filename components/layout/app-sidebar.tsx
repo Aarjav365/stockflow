@@ -1,5 +1,6 @@
 "use client";
 
+import { StockflowLogo } from "@/components/brand/stockflow-logo";
 import {
   Sidebar,
   SidebarContent,
@@ -13,7 +14,6 @@ import {
 import { sidebarData } from "./data/sidebar-data";
 import { NavGroup } from "./nav-group";
 import { NavUser } from "./nav-user";
-import { Command } from "lucide-react";
 
 export function AppSidebar() {
   return (
@@ -22,8 +22,11 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" className="pointer-events-none">
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                <Command className="size-4" />
+              <div className="relative flex aspect-square size-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted/50 ring-1 ring-border/50 dark:bg-muted/25">
+                <StockflowLogo
+                  decorative
+                  className="size-[1.65rem] shrink-0 opacity-95 dark:invert dark:opacity-90"
+                />
               </div>
               <div className="grid flex-1 text-start text-sm leading-tight">
                 <span className="truncate font-semibold">StockFlow</span>

@@ -1,11 +1,36 @@
 "use client";
 
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
+
+const FLOAT_Y = -14;
+const FLOAT_DURATION = 6.5;
+
+function floatTransition(delay: number) {
+  return {
+    duration: FLOAT_DURATION,
+    repeat: Infinity,
+    ease: [0.45, 0, 0.55, 1] as const,
+    delay,
+  };
+}
 
 /**
  * Decorative hero floaters — theme-aware glass panels.
+ * Vertical drift via Motion (transform only); staggered delays keep phases apart.
  */
 export function HeroAmbient() {
+  const reduceMotion = useReducedMotion();
+  const floatAnimate = reduceMotion ? { y: 0 } : { y: [0, FLOAT_Y, 0] };
+  const floatTransitionProp = reduceMotion
+    ? { duration: 0 }
+    : floatTransition(0);
+  const floatTransition1 = reduceMotion
+    ? { duration: 0 }
+    : floatTransition(FLOAT_DURATION / 3);
+  const floatTransition2 = reduceMotion
+    ? { duration: 0 }
+    : floatTransition((FLOAT_DURATION * 2) / 3);
+
   return (
     <div
       className="pointer-events-none absolute inset-0 z-[2] overflow-hidden"
@@ -19,9 +44,9 @@ export function HeroAmbient() {
       <div className="absolute left-1/2 top-[14%] size-[min(65vw,400px)] -translate-x-1/2 rounded-full border border-dashed border-border/50 motion-reduce:animate-none animate-spin-slow [animation-duration:38s] [animation-direction:reverse]" />
 
       <motion.div
-        className="absolute right-[4%] top-[26%] hidden xl:block"
-        animate={{ y: [0, -16, 0] }}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute right-[4%] top-[26%] hidden will-change-transform lg:block"
+        animate={floatAnimate}
+        transition={floatTransitionProp}
       >
         <div className="liquid-glass-strong glass-panel-glow max-w-[220px] rounded-3xl px-6 py-5 shadow-lg shadow-foreground/5">
           <p className="font-body text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
@@ -37,14 +62,9 @@ export function HeroAmbient() {
       </motion.div>
 
       <motion.div
-        className="absolute left-[3%] top-[42%] hidden lg:block"
-        animate={{ y: [0, 12, 0] }}
-        transition={{
-          duration: 7.5,
-          repeat: Infinity,
-          ease: "easeInOut",
-          delay: 0.5,
-        }}
+        className="absolute left-[3%] top-[42%] hidden will-change-transform lg:block"
+        animate={floatAnimate}
+        transition={floatTransition1}
       >
         <div className="liquid-glass-strong glass-panel-glow max-w-[220px] rounded-3xl px-6 py-5 shadow-lg shadow-foreground/5">
           <p className="font-body text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
@@ -61,14 +81,9 @@ export function HeroAmbient() {
       </motion.div>
 
       <motion.div
-        className="absolute bottom-[26%] right-[8%] hidden md:block"
-        animate={{ y: [0, -10, 0] }}
-        transition={{
-          duration: 5.2,
-          repeat: Infinity,
-          ease: "easeInOut",
-          delay: 1,
-        }}
+        className="absolute bottom-[26%] right-[8%] hidden will-change-transform lg:block"
+        animate={floatAnimate}
+        transition={floatTransition2}
       >
         <div className="liquid-glass max-w-[200px] rounded-2xl border border-border/80 px-6 py-3.5 text-center shadow-md shadow-foreground/5">
           <p className="font-heading text-lg italic text-foreground">

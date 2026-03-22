@@ -1,13 +1,3 @@
-import type { LucideIcon } from "lucide-react";
-import {
-  Bell,
-  Command,
-  LayoutDashboard,
-  Mail,
-  Monitor,
-  Shield,
-} from "lucide-react";
-
 /** Verticals / operator types StockFlow is built for */
 export const partners = [
   "Retail",
@@ -21,26 +11,37 @@ export const processSteps: {
   step: string;
   title: string;
   body: string;
+  /** Substring of `title` to style with a gradient (case-insensitive match). */
+  accent: string;
+  accentVariant?: "frost" | "aurora";
 }[] = [
   {
     step: "01",
     title: "Your organization, isolated",
     body: "Multi-tenant by design—every query is scoped to your org. New users land in their workspace automatically.",
+    accent: "isolated",
+    accentVariant: "frost",
   },
   {
     step: "02",
     title: "Documents that mirror the floor",
     body: "Receipts, deliveries, transfers, and adjustments share one lifecycle: Draft → Waiting → Ready → Done—with numbers like REC-0001, DEL-0001, TRF-0001, ADJ-0001.",
+    accent: "floor",
+    accentVariant: "frost",
   },
   {
     step: "03",
     title: "Stock you can trust",
     body: "Real-time levels per warehouse, low-stock alerts with reorder thresholds, and a full ledger so every quantity change has a paper trail.",
+    accent: "trust",
+    accentVariant: "frost",
   },
   {
     step: "04",
     title: "Built for daily ops",
     body: "Responsive shell with a collapsible sidebar, Ctrl+K command palette, sortable tables with filters, toasts for outcomes, and dark / light / system themes.",
+    accent: "daily",
+    accentVariant: "frost",
   },
 ];
 
@@ -49,6 +50,8 @@ export const workShowcase: {
   tag: string;
   description: string;
   image: string;
+  accent: string;
+  accentVariant?: "frost" | "aurora";
 }[] = [
   {
     title: "Stock ledger",
@@ -57,6 +60,8 @@ export const workShowcase: {
       "Every receipt line, transfer, and adjustment writes to the ledger—audit-ready history without spreadsheets.",
     image:
       "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=1200&q=80",
+    accent: "ledger",
+    accentVariant: "frost",
   },
   {
     title: "Warehouse operations",
@@ -65,6 +70,8 @@ export const workShowcase: {
       "Match ordered vs received on inbound; manage outbound deliveries with the same document rigor.",
     image:
       "https://images.unsplash.com/photo-1553413077-190dd305871c?w=800&q=80",
+    accent: "operations",
+    accentVariant: "aurora",
   },
   {
     title: "Transfers & adjustments",
@@ -73,49 +80,41 @@ export const workShowcase: {
       "Move stock between locations or post adjustments when the floor count and the system disagree.",
     image:
       "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=800&q=80",
+    accent: "adjustments",
+    accentVariant: "frost",
   },
 ];
 
-export const stackItems: {
-  title: string;
-  detail: string;
-  Icon: LucideIcon;
-}[] = [
+export const stackItems: { title: string; detail: string }[] = [
   {
     title: "Command palette",
     detail:
-      "Jump to any page or action from the keyboard—built for people who work in flow, not nested menus.",
-    Icon: Command,
+      "Jump to any page or action from the keyboard—flow state, not nested menus.",
   },
   {
     title: "Sidebar that breathes",
     detail:
-      "Collapse it on the floor or a tablet; expand when you need the full map of warehouses and modules.",
-    Icon: LayoutDashboard,
+      "Collapse on the floor or a tablet; expand for the full map of warehouses and modules.",
   },
   {
     title: "Themes that respect the shift",
     detail:
-      "Light for the office, dark for the dock—plus system so handoffs between desk and floor feel natural.",
-    Icon: Monitor,
+      "Light for the office, dark for the dock—system sync so desk and handoffs feel natural.",
   },
   {
     title: "Toasts that tell the truth",
     detail:
-      "Receipt posted, transfer blocked, adjustment saved—clear outcomes so nobody is guessing what happened.",
-    Icon: Bell,
+      "Posted, blocked, saved—outcomes you can read at a glance, no guesswork.",
   },
   {
     title: "Sessions you can enforce",
     detail:
-      "JWT-backed auth with middleware on protected routes—less “oops, wrong tab” and more control.",
-    Icon: Shield,
+      "JWT sessions and middleware on protected routes—fewer wrong-tab surprises.",
   },
   {
     title: "Email that unlocks access",
     detail:
-      "OTP verification and password resets through Resend—smooth onboarding without a separate help desk.",
-    Icon: Mail,
+      "OTP and password resets via Resend—onboarding without a separate help desk.",
   },
 ];
 

@@ -1,9 +1,9 @@
 "use client";
 
 import { ArrowUpRight, Menu } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 
+import { StockflowLogo } from "@/components/brand/stockflow-logo";
 import { ThemeSwitch } from "@/components/theme-switch";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,15 +27,14 @@ export function LandingNavbar() {
   return (
     <header className="fixed top-0 right-0 left-0 z-50 border-b border-border/60 bg-background/85 pb-3 backdrop-blur-md sm:top-4 sm:border-0 sm:bg-transparent sm:pb-0 sm:backdrop-blur-none">
       <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 sm:gap-3 sm:px-6 md:px-10">
-        <Link href="/" className="shrink-0">
-          <Image
-            src="/logo.svg"
-            width={48}
-            height={48}
-            alt="StockFlow"
-            className="h-10 w-10 sm:h-12 sm:w-12 dark:invert"
-            priority
-          />
+        <Link
+          href="/"
+          className="shrink-0 block rounded-2xl p-1 ring-1 ring-border/55 bg-muted/30 shadow-sm transition-colors hover:bg-muted/45 dark:bg-muted/20 dark:ring-border/45"
+          aria-label="StockFlow home"
+        >
+          <div className="overflow-hidden rounded-[0.6rem]">
+            <StockflowLogo className="h-8 w-8 sm:h-10 sm:w-10 block opacity-[0.96] dark:invert dark:opacity-[0.9]" />
+          </div>
         </Link>
 
         <div className="hidden min-w-0 flex-1 justify-center md:flex">
