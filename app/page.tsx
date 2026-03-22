@@ -4,7 +4,8 @@ import { Barlow, Instrument_Serif } from "next/font/google";
 import { StockflowLanding } from "@/components/landing/stockflow-landing";
 import { cn } from "@/lib/utils";
 
-const homeTitle = "StockFlow — Warehouse & inventory management";
+const homeTitle =
+  "StockFlow — Multi-warehouse inventory & audit-ready ledger";
 const homeDescription =
   "Warehouse and inventory management with receipts, deliveries, transfers, adjustments, multi-warehouse stock, and a full audit ledger.";
 
@@ -28,17 +29,10 @@ export const metadata: Metadata = {
     description: homeDescription,
     url: "/",
     type: "website",
-    images: [
-      {
-        url: "/hero.png",
-        alt: "StockFlow — warehouse and inventory management preview",
-      },
-    ],
   },
   twitter: {
     title: homeTitle,
     description: homeDescription,
-    images: ["/hero.png"],
   },
   alternates: {
     canonical: "/",

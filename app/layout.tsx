@@ -27,16 +27,9 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     siteName: "StockFlow",
-    images: [
-      {
-        url: "/hero.png",
-        alt: "StockFlow — warehouse and inventory management preview",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
-    images: ["/hero.png"],
   },
   icons: {
     icon: [{ url: "/favicon.ico", type: "image/x-icon", sizes: "any" }],
