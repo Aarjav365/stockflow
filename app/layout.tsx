@@ -4,7 +4,7 @@ import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SessionProvider } from "@/components/providers/session-provider";
-import { getSiteUrl } from "@/lib/site-url";
+import { getSiteUrl, OG_PREVIEW_IMAGE_URL } from "@/lib/site-url";
 import { cn } from "@/lib/utils";
 import "./globals.css";
 
@@ -12,7 +12,6 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 const siteUrl = getSiteUrl();
 const metadataBase = new URL(siteUrl);
-const ogImageUrl = new URL("/hero.png", metadataBase).href;
 
 export const metadata: Metadata = {
   metadataBase,
@@ -31,7 +30,7 @@ export const metadata: Metadata = {
     siteName: "StockFlow",
     images: [
       {
-        url: ogImageUrl,
+        url: OG_PREVIEW_IMAGE_URL,
         width: 1898,
         height: 840,
         alt: "StockFlow — Multi-warehouse inventory with an audit-ready ledger",
@@ -43,7 +42,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     images: [
       {
-        url: ogImageUrl,
+        url: OG_PREVIEW_IMAGE_URL,
         width: 1898,
         height: 840,
         alt: "StockFlow — Multi-warehouse inventory with an audit-ready ledger",

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Barlow, Instrument_Serif } from "next/font/google";
 
 import { StockflowLanding } from "@/components/landing/stockflow-landing";
-import { getSiteUrl } from "@/lib/site-url";
+import { getSiteUrl, OG_PREVIEW_IMAGE_URL } from "@/lib/site-url";
 import { cn } from "@/lib/utils";
 
 const homeTitle =
@@ -11,7 +11,6 @@ const homeDescription =
   "Warehouse and inventory management with receipts, deliveries, transfers, adjustments, multi-warehouse stock, and a full audit ledger. Get started—see inventory clarity built in.";
 const siteUrl = getSiteUrl();
 const homeUrl = `${siteUrl}/`;
-const ogImageUrl = `${siteUrl}/hero.png`;
 const ogImageAlt =
   "StockFlow — Multi-warehouse inventory with an audit-ready ledger";
 
@@ -37,7 +36,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: ogImageUrl,
+        url: OG_PREVIEW_IMAGE_URL,
         width: 1898,
         height: 840,
         alt: ogImageAlt,
@@ -51,7 +50,7 @@ export const metadata: Metadata = {
     description: homeDescription,
     images: [
       {
-        url: ogImageUrl,
+        url: OG_PREVIEW_IMAGE_URL,
         width: 1898,
         height: 840,
         alt: ogImageAlt,
